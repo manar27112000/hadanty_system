@@ -1,0 +1,914 @@
+erdiagram Model
+
+notation=default
+
+entity Nursery {
+   nursery_id key
+   name
+   owner_name
+   commercial_registration_no
+   tax_number
+   address
+   phone
+   status
+   created_at
+}
+
+entity Branch {
+   branch_id key
+   nursery_id
+   name
+   address
+   phone
+   status
+   created_at
+}
+
+entity Child {
+   child_id key
+   first_name
+   last_name
+   national_id
+   date_of_birth
+   gender
+   status
+   created_at
+   updated_at
+}
+
+entity Guardian {
+   guardian_id key
+   first_name
+   last_name
+   phone
+   email
+   address
+   status
+   created_at
+}
+
+entity Staff {
+   staff_id key
+   first_name
+   last_name
+   national_id
+   phone
+   email
+   specialization
+   qualification
+   hire_date
+   employment_status
+   created_at
+}
+
+entity UserAccount {
+   account_id key
+   staff_id
+   guardian_id
+   username
+   password_hash
+   account_type
+   is_active
+   created_at
+   last_login_at
+}
+
+entity Role {
+   role_id key
+   name
+   description
+   status
+}
+
+entity Permission {
+   permission_id key
+   name
+   description
+   module
+}
+
+entity Class {
+   class_id key
+   branch_id
+   name
+   age_group
+   capacity
+   status
+}
+
+entity AcademicYear {
+   academic_year_id key
+   nursery_id
+   name
+   start_date
+   end_date
+   status
+}
+
+entity Enrollment {
+   enrollment_id key
+   child_id
+   academic_year_id
+   branch_id
+   enrollment_date
+   status
+   created_at
+}
+
+entity ClassAssignment {
+   assignment_id key
+   enrollment_id
+   class_id
+   start_date
+   end_date
+   status
+}
+
+entity Attendance {
+   attendance_id key
+   child_id
+   attendance_date
+   status
+   created_at
+}
+
+entity CheckIn {
+   check_in_id key
+   attendance_id
+   check_in_time
+   created_at
+}
+
+entity CheckOut {
+   check_out_id key
+   attendance_id
+   check_out_time
+   created_at
+}
+
+entity AuthorizedPickupPerson {
+   authorized_person_id key
+   name
+   phone
+   relationship_type
+   identification_info
+   status
+   created_at
+}
+
+entity Pickup {
+   pickup_id key
+   child_id
+   authorized_person_id
+   pickup_person_name
+   pickup_type
+   pickup_time
+   status
+   created_at
+}
+
+entity PickupApproval {
+   approval_id key
+   pickup_id
+   authorized_person_name
+   approval_time
+   status
+   created_at
+}
+
+entity DailyReport {
+   daily_report_id key
+   child_id
+   report_date
+   food
+   sleep
+   mood
+   activities_notes
+   homework_notes
+   general_notes
+   created_at
+}
+
+entity Subject {
+   subject_id key
+   name
+   description
+   status
+}
+
+entity DailyAssessment {
+   daily_assessment_id key
+   child_id
+   subject_id
+   assessment_date
+   level
+   notes
+}
+
+entity MonthlyAssessment {
+   monthly_assessment_id key
+   child_id
+   subject_id
+   month
+   year
+   level
+   notes
+}
+
+entity Homework {
+   homework_id key
+   class_id
+   title
+   description
+   assigned_date
+   due_date
+   status
+}
+
+entity Activity {
+   activity_id key
+   class_id
+   name
+   description
+   activity_date
+   status
+}
+
+entity Media {
+   media_id key
+   child_id
+   file_url
+   file_type
+   uploaded_at
+   status
+}
+
+entity HealthRecord {
+   health_record_id key
+   child_id
+   medical_notes
+   emergency_notes
+   updated_at
+}
+
+entity Allergy {
+   allergy_id key
+   health_record_id
+   allergy_name
+   severity
+   notes
+   status
+}
+
+entity Medication {
+   medication_id key
+   health_record_id
+   medication_name
+   dosage
+   start_date
+   end_date
+   instructions
+   status
+}
+
+entity MedicationConsent {
+   consent_id key
+   medication_id
+   consent_date
+   status
+}
+
+entity Incident {
+   incident_id key
+   child_id
+   staff_id
+   incident_type
+   description
+   incident_date
+   action_taken
+   parent_notified
+   created_at
+}
+
+entity FeeType {
+   fee_type_id key
+   name
+   description
+   status
+}
+
+entity Invoice {
+   invoice_id key
+   child_id
+   invoice_date
+   due_date
+   discount_total
+   total_amount
+   status
+   created_at
+}
+
+entity InvoiceItem {
+   invoice_item_id key
+   invoice_id
+   fee_type_id
+   description
+   quantity
+   unit_amount
+   discount_amount
+   total_amount
+}
+
+entity Discount {
+   discount_id key
+   name
+   discount_type
+   value
+   start_date
+   end_date
+   status
+}
+
+entity InvoiceDiscount {
+   invoice_discount_id key
+   invoice_id
+   discount_id
+   discount_amount
+}
+
+entity InvoiceItemDiscount {
+   invoice_item_discount_id key
+   invoice_item_id
+   discount_id
+   discount_amount
+}
+
+entity Payment {
+   payment_id key
+   invoice_id
+   amount
+   payment_date
+   payment_method
+   transaction_number
+   status
+}
+
+entity PaymentAttempt {
+   attempt_id key
+   payment_id
+   transaction_number
+   receipt_file_url
+   submitted_at
+   reviewed_at
+   status
+   rejection_reason
+}
+
+entity Refund {
+   refund_id key
+   payment_id
+   amount
+   reason
+   refund_date
+   status
+}
+
+entity Receipt {
+   receipt_id key
+   payment_id
+   receipt_number
+   amount
+   issued_at
+   payment_method
+   transaction_number
+}
+
+entity Bus {
+   bus_id key
+   branch_id
+   bus_number
+   license_plate
+   capacity
+   status
+}
+
+entity Driver {
+   driver_id key
+   branch_id
+   name
+   phone
+   license_number
+   status
+}
+
+entity BusSupervisor {
+   supervisor_id key
+   branch_id
+   name
+   phone
+   status
+}
+
+entity TransportRoute {
+   route_id key
+   branch_id
+   name
+   description
+   status
+}
+
+entity TransportStop {
+   stop_id key
+   route_id
+   name
+   address
+   sequence_no
+   latitude
+   longitude
+}
+
+entity ChildTransportStop {
+   child_transport_stop_id key
+   child_id
+   stop_id
+   stop_type
+   start_date
+   end_date
+   status
+}
+
+entity TransportTrip {
+   trip_id key
+   route_id
+   bus_id
+   driver_id
+   supervisor_id
+   trip_date
+   trip_type
+   start_time
+   arrival_time
+   status
+}
+
+entity TripChild {
+   trip_child_id key
+   trip_id
+   child_id
+   boarding_status
+   boarding_time
+   arrival_time
+   pickup_time
+}
+
+entity Event {
+   event_id key
+   branch_id
+   name
+   description
+   event_date
+   start_time
+   end_time
+   location
+   cost
+   status
+}
+
+entity EventRegistration {
+   registration_id key
+   event_id
+   child_id
+   confirmation_status
+   registered_at
+}
+
+entity EventAttendance {
+   event_attendance_id key
+   registration_id
+   attendance_status
+   recorded_at
+}
+
+entity NotificationType {
+   notification_type_id key
+   name
+   description
+   is_enabled
+}
+
+entity Notification {
+   notification_id key
+   notification_type_id
+   title
+   message
+   created_at
+   status
+}
+
+entity NotificationDelivery {
+   delivery_id key
+   notification_id
+   account_id
+   sent_at
+   delivered_at
+   read_at
+   delivery_status
+}
+
+entity Holiday {
+   holiday_id key
+   branch_id
+   name
+   start_date
+   end_date
+   description
+   status
+}
+
+entity WorkingHour {
+   working_hour_id key
+   branch_id
+   day_of_week
+   open_time
+   close_time
+   is_working_day
+}
+
+entity NurserySetting {
+   setting_id key
+   nursery_id
+   setting_key
+   setting_value
+   updated_at
+}
+
+entity BranchSetting {
+   branch_setting_id key
+   branch_id
+   setting_key
+   setting_value
+   updated_at
+}
+
+entity AuditLog {
+   audit_id key
+   account_id
+   action
+   entity_name
+   entity_id
+   old_value
+   new_value
+   action_date
+   ip_address
+}
+
+entity StaffBranch {
+   staff_id key
+   branch_id key
+}
+
+entity AccountRole {
+   account_id key
+   role_id key
+   branch_id key
+}
+
+entity RolePermission {
+   role_id key
+   permission_id key
+}
+
+entity ClassStaff {
+   class_id key
+   staff_id key
+}
+
+entity ChildGuardian {
+   child_id key
+   guardian_id key
+}
+
+entity ChildAuthorizedPickup {
+   child_id key
+   authorized_person_id key
+}
+
+
+relationship NurseryBranches {
+   Nursery[1] -> Branch[N]
+}
+
+relationship BranchClasses {
+   Branch[1] -> Class[N]
+}
+
+relationship NurseryAcademicYears {
+   Nursery[1] -> AcademicYear[N]
+}
+
+relationship BranchStaff {
+   Branch[N] -> Staff[N]
+}
+
+relationship StaffBranches {
+   Staff[1] -> StaffBranch[N]
+}
+
+relationship BranchStaffLinks {
+   Branch[1] -> StaffBranch[N]
+}
+
+relationship StaffAccount {
+   Staff[1] -> UserAccount[0..1]
+}
+
+relationship GuardianAccount {
+   Guardian[1] -> UserAccount[0..1]
+}
+
+relationship AccountRoles {
+   UserAccount[1] -> AccountRole[N]
+}
+
+relationship RoleAccounts {
+   Role[1] -> AccountRole[N]
+}
+
+relationship BranchAccountRoles {
+   Branch[1] -> AccountRole[N]
+}
+
+relationship RolePermissions {
+   Role[1] -> RolePermission[N]
+}
+
+relationship PermissionRoles {
+   Permission[1] -> RolePermission[N]
+}
+
+relationship ClassStaffLinks {
+   Class[1] -> ClassStaff[N]
+}
+
+relationship StaffClassLinks {
+   Staff[1] -> ClassStaff[N]
+}
+
+relationship ChildGuardians {
+   Child[1] -> ChildGuardian[N]
+}
+
+relationship GuardianChildren {
+   Guardian[1] -> ChildGuardian[N]
+}
+
+relationship ChildAuthorizedPersons {
+   Child[1] -> ChildAuthorizedPickup[N]
+}
+
+relationship AuthorizedPersonChildren {
+   AuthorizedPickupPerson[1] -> ChildAuthorizedPickup[N]
+}
+
+relationship ChildEnrollments {
+   Child[1] -> Enrollment[N]
+}
+
+relationship AcademicYearEnrollments {
+   AcademicYear[1] -> Enrollment[N]
+}
+
+relationship BranchEnrollments {
+   Branch[1] -> Enrollment[N]
+}
+
+relationship EnrollmentAssignments {
+   Enrollment[1] -> ClassAssignment[N]
+}
+
+relationship ClassAssignments {
+   Class[1] -> ClassAssignment[N]
+}
+
+relationship ChildAttendance {
+   Child[1] -> Attendance[N]
+}
+
+relationship AttendanceCheckIn {
+   Attendance[1] -> CheckIn[0..1]
+}
+
+relationship AttendanceCheckOut {
+   Attendance[1] -> CheckOut[0..1]
+}
+
+relationship ChildPickups {
+   Child[1] -> Pickup[N]
+}
+
+relationship AuthorizedPersonPickups {
+   AuthorizedPickupPerson[1] -> Pickup[N]
+}
+
+relationship PickupApproval {
+   Pickup[1] -> PickupApproval[0..1]
+}
+
+relationship ChildDailyReports {
+   Child[1] -> DailyReport[N]
+}
+
+relationship ChildDailyAssessments {
+   Child[1] -> DailyAssessment[N]
+}
+
+relationship SubjectDailyAssessments {
+   Subject[1] -> DailyAssessment[N]
+}
+
+relationship ChildMonthlyAssessments {
+   Child[1] -> MonthlyAssessment[N]
+}
+
+relationship SubjectMonthlyAssessments {
+   Subject[1] -> MonthlyAssessment[N]
+}
+
+relationship ClassHomework {
+   Class[1] -> Homework[N]
+}
+
+relationship ClassActivities {
+   Class[1] -> Activity[N]
+}
+
+relationship ChildMedia {
+   Child[1] -> Media[N]
+}
+
+relationship ChildHealthRecord {
+   Child[1] -> HealthRecord[0..1]
+}
+
+relationship HealthAllergies {
+   HealthRecord[1] -> Allergy[N]
+}
+
+relationship HealthMedications {
+   HealthRecord[1] -> Medication[N]
+}
+
+relationship MedicationConsent {
+   Medication[1] -> MedicationConsent[0..1]
+}
+
+relationship ChildIncidents {
+   Child[1] -> Incident[N]
+}
+
+relationship StaffIncidents {
+   Staff[1] -> Incident[N]
+}
+
+relationship ChildInvoices {
+   Child[1] -> Invoice[N]
+}
+
+relationship InvoiceItems {
+   Invoice[1] -> InvoiceItem[N]
+}
+
+relationship FeeTypeItems {
+   FeeType[1] -> InvoiceItem[N]
+}
+
+relationship InvoiceDiscounts {
+   Invoice[1] -> InvoiceDiscount[N]
+}
+
+relationship DiscountInvoices {
+   Discount[1] -> InvoiceDiscount[N]
+}
+
+relationship ItemDiscounts {
+   InvoiceItem[1] -> InvoiceItemDiscount[N]
+}
+
+relationship DiscountItems {
+   Discount[1] -> InvoiceItemDiscount[N]
+}
+
+relationship InvoicePayments {
+   Invoice[1] -> Payment[N]
+}
+
+relationship PaymentAttempts {
+   Payment[1] -> PaymentAttempt[N]
+}
+
+relationship PaymentRefunds {
+   Payment[1] -> Refund[N]
+}
+
+relationship PaymentReceipt {
+   Payment[1] -> Receipt[0..1]
+}
+
+relationship BranchBuses {
+   Branch[1] -> Bus[N]
+}
+
+relationship BranchDrivers {
+   Branch[1] -> Driver[N]
+}
+
+relationship BranchSupervisors {
+   Branch[1] -> BusSupervisor[N]
+}
+
+relationship BranchRoutes {
+   Branch[1] -> TransportRoute[N]
+}
+
+relationship RouteStops {
+   TransportRoute[1] -> TransportStop[N]
+}
+
+relationship ChildStops {
+   Child[1] -> ChildTransportStop[N]
+}
+
+relationship StopChildren {
+   TransportStop[1] -> ChildTransportStop[N]
+}
+
+relationship RouteTrips {
+   TransportRoute[1] -> TransportTrip[N]
+}
+
+relationship BusTrips {
+   Bus[1] -> TransportTrip[N]
+}
+
+relationship DriverTrips {
+   Driver[1] -> TransportTrip[N]
+}
+
+relationship SupervisorTrips {
+   BusSupervisor[1] -> TransportTrip[N]
+}
+
+relationship TripChildren {
+   TransportTrip[1] -> TripChild[N]
+}
+
+relationship ChildTrips {
+   Child[1] -> TripChild[N]
+}
+
+relationship BranchEvents {
+   Branch[1] -> Event[N]
+}
+
+relationship EventRegistrations {
+   Event[1] -> EventRegistration[N]
+}
+
+relationship ChildEventRegistrations {
+   Child[1] -> EventRegistration[N]
+}
+
+relationship EventAttendance {
+   EventRegistration[1] -> EventAttendance[0..1]
+}
+
+relationship NotificationTypes {
+   NotificationType[1] -> Notification[N]
+}
+
+relationship NotificationDeliveries {
+   Notification[1] -> NotificationDelivery[N]
+}
+
+relationship AccountDeliveries {
+   UserAccount[1] -> NotificationDelivery[N]
+}
+
+relationship BranchHolidays {
+   Branch[1] -> Holiday[N]
+}
+
+relationship BranchWorkingHours {
+   Branch[1] -> WorkingHour[N]
+}
+
+relationship NurserySettings {
+   Nursery[1] -> NurserySetting[N]
+}
+
+relationship BranchSettings {
+   Branch[1] -> BranchSetting[N]
+}
+
+relationship AccountAuditLogs {
+   UserAccount[1] -> AuditLog[N]
+}
