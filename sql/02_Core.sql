@@ -193,3 +193,4 @@ CREATE TABLE RolePermission (
         REFERENCES Permission(permission_id)
 );
 GO
+
