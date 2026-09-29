@@ -1,0 +1,807 @@
+أيوه طبعًا. هكتبهولك هنا بشكل **Project Requirements Document** تقدرِ تبعتيه لزميلك مباشرة، ويكون عنده الصورة كاملة من غير ما يحتاج يرجع لكل كلامنا.
+
+# Hadanty | حضانتي
+
+## Nursery Management System — Complete Project Requirements
+
+### 1. فكرة المشروع
+
+**حضانتي (Hadanty)** هو نظام لإدارة الحضانات ورياض الأطفال، مصمم كنظام **Multi-Tenant** بحيث يمكن لكل Nursery أن يكون لديها أكثر من Branch، وكل فرع تتم إدارته بشكل مستقل.
+
+النظام يغطي:
+
+* إدارة الحضانات والفروع
+* الأطفال
+* أولياء الأمور / Guardians
+* الموظفين
+* المستخدمين والصلاحيات
+* السنوات الدراسية
+* الفصول
+* التسجيل وإعادة التسجيل
+* نقل الطفل بين الفصول والفروع
+* الحضور والانصراف
+* استلام الأطفال
+* التقارير اليومية
+* التقييمات
+* الواجبات والأنشطة
+* الملفات والصور
+* الصحة والحساسية والأدوية
+* الحوادث
+* المصروفات والفواتير
+* الخصومات
+* المدفوعات والاسترداد
+* النقل المدرسي
+* الرحلات والـ Events
+* Notifications
+* إعدادات الحضانة والفروع
+* Audit Log
+* التقارير والـ Dashboard
+
+---
+
+# 2. المستخدمون والـ Actors
+
+### Guardian
+
+يستطيع:
+
+* متابعة بيانات أطفاله
+* مشاهدة التقارير
+* مشاهدة التقييمات
+* استقبال Notifications
+* تأكيد حضور الـ Events
+* الدفع إلكترونيًا
+* رفع إثبات الدفع اليدوي
+
+### Staff
+
+يقوم بالعمليات الخاصة بالحضانة حسب الـ Permissions الخاصة به.
+
+### System
+
+يقوم بالعمليات التلقائية مثل:
+
+* Auto Mark Absent
+* إنشاء Receipt بعد الدفع عند تحقق شروط العملية
+
+### Driver
+
+موظف نقل، **ولا يحتاج UserAccount**.
+
+### Bus Supervisor
+
+موظف نقل، **ولا يحتاج UserAccount**.
+
+### Platform Admin
+
+مسؤول عن الـ SaaS Platform نفسه، وليس العمليات اليومية للحضانة.
+
+---
+
+# 3. Business Rules
+
+1. الـ Nursery يمكن أن يكون لها أكثر من Branch.
+2. كل Branch يعمل بشكل مستقل.
+3. الـ Staff يمكن أن يعمل في Branch واحد أو أكثر.
+4. الطفل يمكن أن يكون له أكثر من Guardian.
+5. الـ Guardian يمكن أن يكون مرتبطًا بأكثر من Child.
+6. تسجيل الطفل منفصل عن دفع المصروفات.
+7. عدم دفع المصروفات لا يعني تلقائيًا إلغاء التسجيل.
+8. الـ Admin/Staff يحدد Class الخاص بالطفل.
+9. يجب الاحتفاظ بتاريخ انتقال الطفل بين الفصول.
+10. يمكن إعادة تسجيل الطفل في Academic Year جديد.
+11. التسجيلات القديمة لا يتم حذفها.
+12. الـ Academic Year تابع للـ Nursery.
+13. الـ Class تابع للـ Branch.
+14. Attendance منفصل عن Check-In وCheck-Out.
+15. Authorized Pickup منفصل عن عملية Pickup نفسها.
+16. Exception/Unauthorized Pickup يحتاج Approval.
+17. يجب الاحتفاظ بالـ Audit History.
+18. لا يوجد Chat في النظام؛ يوجد Notifications فقط.
+19. Staff Account يمكن تعطيله بدون حذف البيانات التاريخية.
+20. Driver وBusSupervisor لا يحتاجان UserAccount.
+21. الـ UserAccount يكون مملوكًا إما لـ Staff أو Guardian فقط.
+22. الـ Roles يمكن أن تكون متعددة للمستخدم.
+23. الـ AccountRole مرتبطة بالـ Branch.
+24. الـ Role تحتوي على Permissions متعددة.
+25. الـ Discount يمكن تطبيقه على Invoice كاملة أو Invoice Item محدد.
+26. الـ SaaS Platform Management منفصل عن Operational Nursery Database.
+
+---
+
+# 4. Use Cases
+
+```text
+UC-01 Register Child
+UC-02 Manage Child Data
+UC-03 Manage Guardian
+UC-04 Link Guardian to Child
+UC-05 Create Enrollment
+UC-06 Re-enroll Child
+UC-07 Transfer Child Between Classes
+UC-08 Transfer Child Between Branches
+
+UC-09 Record Check-in
+UC-10 Record Check-out
+UC-11 Manage Attendance
+UC-12 Auto Mark Absent
+
+UC-13 Manage Authorized Pickup
+UC-14 Process Exception Pickup
+
+UC-15 Create Daily Report
+UC-16 Create Daily Assessment
+UC-17 Create Monthly Assessment
+UC-18 Upload Child Media
+UC-19 View Child Reports
+
+UC-20 Manage Fees & Invoices
+UC-21 Apply Discount
+UC-22 Make Electronic Payment
+UC-23 Submit Manual Payment Proof
+UC-24 Review Manual Payment
+UC-25 Process Refund
+UC-26 Generate Payment Receipt
+
+UC-27 Manage Transportation
+UC-28 Manage Transport Status
+
+UC-29 Manage Events
+UC-30 Confirm Event Attendance
+UC-31 Record Event Attendance
+
+UC-32 Manage Health Data
+UC-33 Record Incident
+
+UC-34 Send Notification
+UC-35 View Notifications
+
+UC-36 Manage Staff
+UC-37 Manage Roles & Permissions
+UC-38 Manage Nursery Settings
+
+UC-39 Generate Reports
+UC-40 Export Reports
+UC-41 View Dashboard
+
+UC-42 Manage Academic Year
+UC-43 Manage Holidays
+UC-44 Manage Branches
+
+UC-45 Manage Nursery
+UC-46 Manage Subscription
+UC-47 Technical Support
+UC-48 Support Access / Impersonation
+```
+
+---
+
+# 5. Database Entities
+
+## Core
+
+```text
+Nursery
+Branch
+Child
+Guardian
+Staff
+UserAccount
+Role
+Permission
+StaffBranch
+AccountRole
+RolePermission
+```
+
+## Academic
+
+```text
+Class
+AcademicYear
+Enrollment
+ClassAssignment
+Subject
+Homework
+Activity
+ClassStaff
+```
+
+## Attendance & Pickup
+
+```text
+Attendance
+CheckIn
+CheckOut
+AuthorizedPickupPerson
+ChildAuthorizedPickup
+Pickup
+PickupApproval
+```
+
+## Reports & Assessment
+
+```text
+DailyReport
+DailyAssessment
+MonthlyAssessment
+Media
+```
+
+## Health & Safety
+
+```text
+HealthRecord
+Allergy
+Medication
+MedicationConsent
+Incident
+```
+
+## Finance
+
+```text
+FeeType
+Invoice
+InvoiceItem
+Discount
+InvoiceDiscount
+InvoiceItemDiscount
+Payment
+PaymentAttempt
+Refund
+Receipt
+```
+
+## Transportation
+
+```text
+Bus
+Driver
+BusSupervisor
+TransportRoute
+TransportStop
+TransportTrip
+TripChild
+ChildTransportStop
+```
+
+## Events & Notifications
+
+```text
+Event
+EventRegistration
+EventAttendance
+NotificationType
+Notification
+NotificationDelivery
+```
+
+## Settings & Audit
+
+```text
+Holiday
+WorkingHour
+NurserySetting
+BranchSetting
+AuditLog
+```
+
+---
+
+# 6. أهم العلاقات
+
+```text
+Nursery 1 : N Branch
+
+Branch 1 : N Class
+
+Nursery 1 : N AcademicYear
+
+Staff M : N Branch
+        ↓
+   StaffBranch
+
+Staff 1 : 0..1 UserAccount
+Guardian 1 : 0..1 UserAccount
+
+UserAccount M : N Role
+        ↓
+    AccountRole
+
+Role M : N Permission
+        ↓
+    RolePermission
+
+Class M : N Staff
+        ↓
+     ClassStaff
+
+Child M : N Guardian
+        ↓
+    ChildGuardian
+
+Child M : N AuthorizedPickupPerson
+        ↓
+ChildAuthorizedPickup
+```
+
+### Enrollment
+
+```text
+Child 1 : N Enrollment
+AcademicYear 1 : N Enrollment
+Branch 1 : N Enrollment
+
+Enrollment 1 : N ClassAssignment
+Class 1 : N ClassAssignment
+```
+
+### Attendance
+
+```text
+Child 1 : N Attendance
+
+Attendance 1 : 0..1 CheckIn
+Attendance 1 : 0..1 CheckOut
+```
+
+### Pickup
+
+```text
+Child 1 : N Pickup
+
+AuthorizedPickupPerson 1 : N Pickup
+
+Pickup 1 : 0..1 PickupApproval
+```
+
+### Reports
+
+```text
+Child 1 : N DailyReport
+
+Child 1 : N DailyAssessment
+Subject 1 : N DailyAssessment
+
+Child 1 : N MonthlyAssessment
+Subject 1 : N MonthlyAssessment
+
+Child 1 : N Media
+```
+
+### Health
+
+```text
+Child 1 : 0..1 HealthRecord
+
+HealthRecord 1 : N Allergy
+HealthRecord 1 : N Medication
+
+Medication 1 : 0..1 MedicationConsent
+
+Child 1 : N Incident
+Staff 1 : N Incident
+```
+
+### Finance
+
+```text
+Child 1 : N Invoice
+
+Invoice 1 : N InvoiceItem
+FeeType 1 : N InvoiceItem
+
+Invoice M : N Discount
+        ↓
+InvoiceDiscount
+
+InvoiceItem M : N Discount
+        ↓
+InvoiceItemDiscount
+
+Invoice 1 : N Payment
+
+Payment 1 : N PaymentAttempt
+Payment 1 : N Refund
+
+Payment 1 : 0..1 Receipt
+```
+
+### Transportation
+
+```text
+Branch 1 : N Bus
+Branch 1 : N Driver
+Branch 1 : N BusSupervisor
+Branch 1 : N TransportRoute
+
+TransportRoute 1 : N TransportStop
+
+TransportRoute 1 : N TransportTrip
+Bus 1 : N TransportTrip
+Driver 1 : N TransportTrip
+BusSupervisor 1 : N TransportTrip
+
+TransportTrip M : N Child
+        ↓
+    TripChild
+
+Child M : N TransportStop
+        ↓
+ChildTransportStop
+```
+
+### Events
+
+```text
+Branch 1 : N Event
+
+Event 1 : N EventRegistration
+Child 1 : N EventRegistration
+
+EventRegistration 1 : 0..1 EventAttendance
+```
+
+### Notifications
+
+```text
+NotificationType 1 : N Notification
+
+Notification 1 : N NotificationDelivery
+
+UserAccount 1 : N NotificationDelivery
+```
+
+### Settings
+
+```text
+Branch 1 : N Holiday
+Branch 1 : N WorkingHour
+
+Nursery 1 : N NurserySetting
+Branch 1 : N BranchSetting
+
+UserAccount 1 : N AuditLog
+```
+
+---
+
+# 7. Attributes الرئيسية
+
+### Nursery
+
+```text
+nursery_id PK
+name
+owner_name
+commercial_registration_no
+tax_number
+address
+phone
+status
+created_at
+```
+
+### Branch
+
+```text
+branch_id PK
+nursery_id FK
+name
+address
+phone
+status
+created_at
+```
+
+### Child
+
+```text
+child_id PK
+first_name
+last_name
+national_id
+date_of_birth
+gender
+status
+created_at
+updated_at
+```
+
+### Guardian
+
+```text
+guardian_id PK
+first_name
+last_name
+phone
+email
+address
+status
+created_at
+```
+
+### Staff
+
+```text
+staff_id PK
+first_name
+last_name
+national_id
+phone
+email
+specialization
+qualification
+hire_date
+employment_status
+created_at
+```
+
+### UserAccount
+
+```text
+account_id PK
+staff_id FK NULL
+guardian_id FK NULL
+username
+password_hash
+is_active
+created_at
+last_login_at
+```
+
+قاعدة مهمة:
+
+```text
+UserAccount
+    |
+    +-- Staff
+    OR
+    +-- Guardian
+```
+
+وليس الاثنين معًا.
+
+---
+
+# 8. SQL Project Structure
+
+```text
+Hadanty/
+│
+└── sql/
+    │
+    ├── 01_Database.sql
+    ├── 02_Core.sql
+    ├── 03_Academic.sql
+    ├── 04_Attendance_Pickup.sql
+    ├── 05_Reports_Assessment.sql
+    ├── 06_Health_Safety.sql
+    ├── 07_Finance.sql
+    ├── 08_Transportation.sql
+    ├── 09_Events_Notifications.sql
+    ├── 10_Settings_Audit.sql
+    ├── 11_Constraints_Indexes.sql
+    ├── 12_Seed_Data.sql
+    └── 13_Queries.sql
+```
+
+---
+
+# 9. مراحل تنفيذ المشروع
+
+مش مجرد إنشاء Tables.
+
+### Phase 1 — Database Design
+
+```text
+ERD
+↓
+Entities
+↓
+Attributes
+↓
+Relationships
+↓
+PK / FK
+↓
+Normalization
+```
+
+### Phase 2 — Database Creation
+
+```text
+Create Database
+↓
+Create Tables
+↓
+PK
+↓
+FK
+↓
+Constraints
+```
+
+### Phase 3 — Data Integrity
+
+```text
+NOT NULL
+UNIQUE
+CHECK
+DEFAULT
+FK Rules
+```
+
+### Phase 4 — Performance
+
+```text
+Indexes
+↓
+Composite Indexes
+↓
+Execution Plans
+```
+
+### Phase 5 — Sample Data
+
+عمل بيانات حقيقية مترابطة:
+
+```text
+Nursery
+ ↓
+Branch
+ ↓
+Staff / Guardian
+ ↓
+Child
+ ↓
+AcademicYear
+ ↓
+Enrollment
+ ↓
+Class
+ ↓
+Attendance
+ ↓
+Invoice
+ ↓
+Payment
+```
+
+### Phase 6 — Queries
+
+يبدأ من الأساسيات:
+
+```sql
+SELECT
+FROM
+WHERE
+ORDER BY
+```
+
+ثم:
+
+```text
+COUNT
+SUM
+AVG
+MIN
+MAX
+GROUP BY
+HAVING
+```
+
+ثم:
+
+```text
+INNER JOIN
+LEFT JOIN
+```
+
+ثم:
+
+```text
+Subqueries
+CTE
+CASE
+Window Functions
+```
+
+ثم Queries حقيقية خاصة بالنظام.
+
+---
+
+# 10. Advanced Database
+
+بعد الـ Queries:
+
+```text
+Views
+↓
+Stored Procedures
+↓
+Transactions
+↓
+Triggers
+↓
+Performance Tuning
+↓
+Execution Plans
+```
+
+---
+
+# 11. DBA Part
+
+لو المشروع هيتحول لمشروع قوي للـ Database Administration، نضيف:
+
+```text
+SQL Server Security
+Users
+Logins
+Database Roles
+Permissions
+Backup
+Restore
+Full Backup
+Differential Backup
+Transaction Log Backup
+Recovery Models
+Maintenance
+Monitoring
+Performance Tuning
+Deadlocks
+Blocking
+Indexes
+Statistics
+Execution Plans
+```
+
+---
+
+# 12. Platform Layer — مؤجل
+
+دي مش ضمن الـ Operational Nursery Database الحالية:
+
+```text
+Subscription
+PlatformAdmin
+SupportTicket
+SupportAccess
+Impersonation
+```
+
+دي تتعمل في Layer منفصلة لإدارة الـ SaaS نفسه.
+
+---
+
+# 13. المطلوب من زميلك
+
+ابدأوا **بالـ Database فقط**، وليس التطبيق مباشرة.
+
+الترتيب:
+
+```text
+1. Understand Requirements
+2. Review ERD
+3. Validate Entities
+4. Validate Relationships
+5. Normalize
+6. Create SQL Server Database
+7. Create Tables
+8. Add Constraints
+9. Add Indexes
+10. Insert Seed Data
+11. Write Business Queries
+12. Views
+13. Procedures
+14. Transactions
+15. Security
+16. Backup/Restore
+17. Performance Testing
+```
+
+**ومهم جدًا:** أي Business Rule غير مذكور هنا لا يتم اختراعه من عنده؛ يتناقش معايا/معاكوا الأول قبل إضافته، عشان الـ ERD والـ Database يفضلوا متوافقين مع المتطلبات.
+
+ده كده يعتبر **الـ Master Specification** اللي تبعتيه لزميلك، ويقدر يبدأ منه معاكِ من غير ما يحتاج يعرف كل التفاصيل اللي اتناقشنا فيها قبل كده.

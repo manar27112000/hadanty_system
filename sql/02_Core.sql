@@ -7,11 +7,11 @@ GO
 CREATE TABLE Nursery (
     nursery_id INT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    owner_name VARCHAR(100),
+    owner_name VARCHAR(100) ,
     commercial_registration_no VARCHAR(50) UNIQUE,
     tax_number VARCHAR(50) UNIQUE,
     address VARCHAR(255),
-    phone VARCHAR(20),
+    phone VARCHAR(20) ,
     status VARCHAR(20),
     created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME()
 );
@@ -194,3 +194,18 @@ CREATE TABLE RolePermission (
 );
 GO
 
+-- =============================================
+-- 11. Child
+-- =============================================
+CREATE TABLE Child (
+    child_id INT PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    national_id VARCHAR(50) UNIQUE,
+    date_of_birth DATE NOT NULL,
+    gender VARCHAR(20),
+    status VARCHAR(20),
+    created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+    updated_at DATETIME2 NULL
+);
+GO
