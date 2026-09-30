@@ -64,6 +64,10 @@ CREATE INDEX IX_Enrollment_Branch
 ON Enrollment (branch_id);
 GO
 
+CREATE INDEX IX_Enrollment_AcademicYear
+ON Enrollment (academic_year_id);
+GO
+
 -- =============================================
 -- 4. ClassAssignment
 -- =============================================
@@ -112,9 +116,7 @@ GO
 -- =============================================
 -- 1. DailyReport
 -- =============================================
-CREATE INDEX IX_DailyReport_Child_Date
-ON DailyReport (child_id, report_date);
-GO
+-- No index on (child_id, report_date): UQ_DailyReport_Child_Date already provides it.
 
 -- =============================================
 -- 2. DailyAssessment
@@ -175,18 +177,14 @@ ON InvoiceItem (invoice_id);
 GO
 
 -- 3. InvoiceDiscount
-CREATE INDEX IX_InvoiceDiscount_Invoice
-ON InvoiceDiscount (invoice_id);
-GO
+-- No index on InvoiceDiscount (invoice_id): UQ_InvoiceDiscount_Invoice_Discount already provides it.
 
 CREATE INDEX IX_InvoiceDiscount_Discount
 ON InvoiceDiscount (discount_id);
 GO
 
 -- 4. InvoiceItemDiscount
-CREATE INDEX IX_InvoiceItemDiscount_Item
-ON InvoiceItemDiscount (invoice_item_id);
-GO
+-- No index on InvoiceItemDiscount (invoice_item_id): UQ_InvoiceItemDiscount_Item_Discount already provides it.
 
 CREATE INDEX IX_InvoiceItemDiscount_Discount
 ON InvoiceItemDiscount (discount_id);

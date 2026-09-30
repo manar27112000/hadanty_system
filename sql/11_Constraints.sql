@@ -3,7 +3,7 @@ GO
 
 /* =========================================================
    11_Constraints.sql
-   Constraints 
+   Constraints only (indexes are in 12_Indexes.sql)
    ========================================================= */
 
 
@@ -20,11 +20,6 @@ GO
 /* =========================================================
    2. Branch
    ========================================================= */
-
-ALTER TABLE Branch
-ADD CONSTRAINT UQ_Branch_Nursery_Name
-UNIQUE (nursery_id, name);
-GO
 
 ALTER TABLE Branch
 ADD CONSTRAINT CK_Branch_Status
@@ -200,7 +195,17 @@ GO
 
 
 /* =========================================================
-   18. DailyAssessment
+   18. DailyReport
+   ========================================================= */
+
+ALTER TABLE DailyReport
+ADD CONSTRAINT UQ_DailyReport_Child_Date
+UNIQUE (child_id, report_date);
+GO
+
+
+/* =========================================================
+   19. DailyAssessment
    ========================================================= */
 
 ALTER TABLE DailyAssessment
@@ -214,7 +219,7 @@ GO
 
 
 /* =========================================================
-   19. MonthlyAssessment
+   20. MonthlyAssessment
    ========================================================= */
 
 ALTER TABLE MonthlyAssessment
@@ -234,7 +239,7 @@ GO
 
 
 /* =========================================================
-   20. HealthRecord
+   21. HealthRecord
    =========================================================
    Already has UNIQUE(child_id)
    No additional constraint needed.
@@ -242,7 +247,7 @@ GO
 
 
 /* =========================================================
-   21. Medication
+   22. Medication
    ========================================================= */
 
 ALTER TABLE Medication
@@ -256,7 +261,7 @@ GO
 
 
 /* =========================================================
-   22. MedicationConsent
+   23. MedicationConsent
    =========================================================
    Already has UNIQUE(medication_id)
    No additional constraint needed.
@@ -264,7 +269,7 @@ GO
 
 
 /* =========================================================
-   23. FeeType
+   24. FeeType
    ========================================================= */
 
 ALTER TABLE FeeType
@@ -274,7 +279,7 @@ GO
 
 
 /* =========================================================
-   24. Invoice
+   25. Invoice
    ========================================================= */
 
 ALTER TABLE Invoice
@@ -297,7 +302,7 @@ GO
 
 
 /* =========================================================
-   25. InvoiceItem
+   26. InvoiceItem
    ========================================================= */
 
 ALTER TABLE InvoiceItem
@@ -322,7 +327,7 @@ GO
 
 
 /* =========================================================
-   26. Discount
+   27. Discount
    ========================================================= */
 
 ALTER TABLE Discount
@@ -341,7 +346,7 @@ GO
 
 
 /* =========================================================
-   27. InvoiceDiscount
+   28. InvoiceDiscount
    ========================================================= */
 
 ALTER TABLE InvoiceDiscount
@@ -356,7 +361,7 @@ GO
 
 
 /* =========================================================
-   28. InvoiceItemDiscount
+   29. InvoiceItemDiscount
    ========================================================= */
 
 ALTER TABLE InvoiceItemDiscount
@@ -371,7 +376,7 @@ GO
 
 
 /* =========================================================
-   29. Payment
+   30. Payment
    ========================================================= */
 
 ALTER TABLE Payment
@@ -381,7 +386,7 @@ GO
 
 
 /* =========================================================
-   30. Refund
+   31. Refund
    ========================================================= */
 
 ALTER TABLE Refund
@@ -391,7 +396,7 @@ GO
 
 
 /* =========================================================
-   31. Receipt
+   32. Receipt
    ========================================================= */
 
 ALTER TABLE Receipt
@@ -401,7 +406,7 @@ GO
 
 
 /* =========================================================
-   32. Bus
+   33. Bus
    ========================================================= */
 
 ALTER TABLE Bus
@@ -411,7 +416,7 @@ GO
 
 
 /* =========================================================
-   33. TransportStop
+   34. TransportStop
    ========================================================= */
 
 ALTER TABLE TransportStop
@@ -421,7 +426,7 @@ GO
 
 
 /* =========================================================
-   34. TransportTrip
+   35. TransportTrip
    ========================================================= */
 
 ALTER TABLE TransportTrip
@@ -435,27 +440,29 @@ GO
 
 
 /* =========================================================
-   35. TripChild
+   36. TripChild
    ========================================================= */
 
 ALTER TABLE TripChild
 ADD CONSTRAINT CK_TripChild_Times
 CHECK (
-    (boarding_time IS NULL
+    (
+        boarding_time IS NULL
         OR arrival_time IS NULL
-        OR arrival_time >= boarding_time)
-
+        OR arrival_time >= boarding_time
+    )
     AND
-
-    (arrival_time IS NULL
+    (
+        arrival_time IS NULL
         OR pickup_time IS NULL
-        OR pickup_time >= arrival_time)
+        OR pickup_time >= arrival_time
+    )
 );
 GO
 
 
 /* =========================================================
-   36. ChildTransportStop
+   37. ChildTransportStop
    ========================================================= */
 
 ALTER TABLE ChildTransportStop
@@ -469,7 +476,7 @@ GO
 
 
 /* =========================================================
-   37. Event
+   38. Event
    ========================================================= */
 
 ALTER TABLE Event
@@ -491,264 +498,22 @@ GO
 
 
 /* =========================================================
-   38. NotificationDelivery
+   39. NotificationDelivery
    ========================================================= */
 
 ALTER TABLE NotificationDelivery
 ADD CONSTRAINT CK_NotificationDelivery_Times
 CHECK (
-    (delivered_at IS NULL
+    (
+        delivered_at IS NULL
         OR sent_at IS NULL
-        OR delivered_at >= sent_at)
-
+        OR delivered_at >= sent_at
+    )
     AND
-
-    (read_at IS NULL
+    (
+        read_at IS NULL
         OR delivered_at IS NULL
-        OR read_at >= delivered_at)
+        OR read_at >= delivered_at
+    )
 );
 GO
-
-
-/* =========================================================
-   39. Holiday
-   ========================================================= */
-
-ALTER TABLE Holiday
-ADD CONSTRAINT CK_Holiday_Dates
-CHECK (end_date >= start_date);
-GO
-
-
-/* =========================================================
-   40. WorkingHour
-   ========================================================= */
-
-ALTER TABLE WorkingHour
-ADD CONSTRAINT CK_WorkingHour_DayOfWeek
-CHECK (day_of_week BETWEEN 1 AND 7);
-GO
-
-ALTER TABLE WorkingHour
-ADD CONSTRAINT CK_WorkingHour_Times
-CHECK (
-    is_working_day = 0
-    OR open_time IS NULL
-    OR close_time IS NULL
-    OR close_time > open_time
-);
-GO
-
-
-/* =========================================================
-   INDEXES
-   ========================================================= */
-
-
-/* =========================================================
-   41. ChildGuardian
-   ========================================================= */
-
-CREATE INDEX IX_ChildGuardian_Guardian
-ON ChildGuardian (guardian_id);
-GO
-
-
-/* =========================================================
-   42. StaffBranch
-   ========================================================= */
-
-CREATE INDEX IX_StaffBranch_Branch
-ON StaffBranch (branch_id);
-GO
-
-
-/* =========================================================
-   43. AccountRole
-   ========================================================= */
-
-CREATE INDEX IX_AccountRole_Role_Branch
-ON AccountRole (role_id, branch_id);
-GO
-
-
-/* =========================================================
-   44. RolePermission
-   ========================================================= */
-
-CREATE INDEX IX_RolePermission_Permission
-ON RolePermission (permission_id);
-GO
-
-
-/* =========================================================
-   45. ClassStaff
-   ========================================================= */
-
-CREATE INDEX IX_ClassStaff_Staff
-ON ClassStaff (staff_id);
-GO
-
-
-/* =========================================================
-   46. ClassAssignment
-   ========================================================= */
-
-CREATE INDEX IX_ClassAssignment_Class
-ON ClassAssignment (class_id);
-GO
-
-
-/* =========================================================
-   47. Attendance
-   ========================================================= */
-
-CREATE INDEX IX_Attendance_Child_Date
-ON Attendance (child_id, attendance_date);
-GO
-
-
-/* =========================================================
-   48. Pickup
-   ========================================================= */
-
-CREATE INDEX IX_Pickup_Child_Time
-ON Pickup (child_id, pickup_time);
-GO
-
-
-/* =========================================================
-   49. DailyReport
-   ========================================================= */
-
-CREATE INDEX IX_DailyReport_Child_Date
-ON DailyReport (child_id, report_date);
-GO
-
-
-/* =========================================================
-   50. DailyAssessment
-   ========================================================= */
-
-CREATE INDEX IX_DailyAssessment_Child_Date
-ON DailyAssessment (child_id, assessment_date);
-GO
-
-
-/* =========================================================
-   51. MonthlyAssessment
-   ========================================================= */
-
-CREATE INDEX IX_MonthlyAssessment_Child_Year_Month
-ON MonthlyAssessment (child_id, year, month);
-GO
-
-
-/* =========================================================
-   52. Invoice
-   ========================================================= */
-
-CREATE INDEX IX_Invoice_Child_Date
-ON Invoice (child_id, invoice_date);
-GO
-
-
-/* =========================================================
-   53. InvoiceItem
-   ========================================================= */
-
-CREATE INDEX IX_InvoiceItem_Invoice
-ON InvoiceItem (invoice_id);
-GO
-
-
-/* =========================================================
-   54. Payment
-   ========================================================= */
-
-CREATE INDEX IX_Payment_Invoice_Date
-ON Payment (invoice_id, payment_date);
-GO
-
-
-/* =========================================================
-   55. PaymentAttempt
-   ========================================================= */
-
-CREATE INDEX IX_PaymentAttempt_Payment
-ON PaymentAttempt (payment_id);
-GO
-
-
-/* =========================================================
-   56. Refund
-   ========================================================= */
-
-CREATE INDEX IX_Refund_Payment
-ON Refund (payment_id);
-GO
-
-
-/* =========================================================
-   57. TripChild
-   ========================================================= */
-
-CREATE INDEX IX_TripChild_Child
-ON TripChild (child_id);
-GO
-
-
-/* =========================================================
-   58. ChildTransportStop
-   ========================================================= */
-
-CREATE INDEX IX_ChildTransportStop_Stop
-ON ChildTransportStop (stop_id);
-GO
-
-
-/* =========================================================
-   59. EventRegistration
-   ========================================================= */
-
-CREATE INDEX IX_EventRegistration_Child
-ON EventRegistration (child_id);
-GO
-
-
-/* =========================================================
-   60. EventAttendance
-   ========================================================= */
-
-CREATE INDEX IX_EventAttendance_Event
-ON EventAttendance (event_id);
-GO
-
-
-/* =========================================================
-   61. Notification
-   ========================================================= */
-
-CREATE INDEX IX_Notification_Account_Date
-ON Notification (account_id, created_at);
-GO
-
-
-/* =========================================================
-   62. NotificationDelivery
-   ========================================================= */
-
-CREATE INDEX IX_NotificationDelivery_Notification
-ON NotificationDelivery (notification_id);
-GO
-
-
-/* =========================================================
-   63. AuditLog
-   ========================================================= */
-
-CREATE INDEX IX_AuditLog_Account_Date
-ON AuditLog (account_id, created_at);
-GO
-
-
