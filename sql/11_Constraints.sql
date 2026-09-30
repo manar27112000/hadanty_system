@@ -1,9 +1,16 @@
 USE Hadanty;
 GO
 
+-- Filtered unique indexes need QUOTED_IDENTIFIER ON.
+-- (SSMS sets it ON by default; sqlcmd does not.)
+SET QUOTED_IDENTIFIER ON;
+GO
+
 /* =========================================================
    11_Constraints.sql
    Constraints only (indexes are in 12_Indexes.sql)
+
+   Approved status values are listed in Section 99 at the end.
    ========================================================= */
 
 
@@ -103,18 +110,16 @@ GO
 
 ALTER TABLE Class
 ADD CONSTRAINT CK_Class_Capacity
-CHECK (capacity >= 0);
+CHECK (capacity > 0);
 GO
 
 
 /* =========================================================
    10. Enrollment
+   A child may have many enrollments over time (and may move
+   between branches in the same year), but only ONE can be
+   'Active' at a time. See Section 98.
    ========================================================= */
-
-ALTER TABLE Enrollment
-ADD CONSTRAINT UQ_Enrollment_Child_AcademicYear
-UNIQUE (child_id, academic_year_id);
-GO
 
 
 /* =========================================================
@@ -516,4 +521,206 @@ CHECK (
         OR read_at >= delivered_at
     )
 );
+GO
+
+
+/* =========================================================
+   98. "Only one ACTIVE" and "unique when present" rules
+   These are filtered unique indexes: the rule applies only
+   to the rows that match the WHERE clause.
+   ========================================================= */
+
+-- A child has at most one current enrollment
+CREATE UNIQUE INDEX UX_Enrollment_OneActivePerChild
+ON Enrollment (child_id)
+WHERE status = 'Active';
+GO
+
+-- An enrollment has at most one current class
+CREATE UNIQUE INDEX UX_ClassAssignment_OneActivePerEnrollment
+ON ClassAssignment (enrollment_id)
+WHERE status = 'Active';
+GO
+
+-- One login per staff member / per guardian (Staff 1 : 0..1 UserAccount)
+CREATE UNIQUE INDEX UX_UserAccount_Staff
+ON UserAccount (staff_id)
+WHERE staff_id IS NOT NULL;
+GO
+
+CREATE UNIQUE INDEX UX_UserAccount_Guardian
+ON UserAccount (guardian_id)
+WHERE guardian_id IS NOT NULL;
+GO
+
+-- National IDs: unique inside a nursery, and optional.
+-- (A plain UNIQUE would allow only ONE row with NULL in SQL Server.)
+CREATE UNIQUE INDEX UX_Child_Nursery_NationalId
+ON Child (nursery_id, national_id)
+WHERE national_id IS NOT NULL;
+GO
+
+CREATE UNIQUE INDEX UX_Staff_Nursery_NationalId
+ON Staff (nursery_id, national_id)
+WHERE national_id IS NOT NULL;
+GO
+
+CREATE UNIQUE INDEX UX_Nursery_CommercialRegistration
+ON Nursery (commercial_registration_no)
+WHERE commercial_registration_no IS NOT NULL;
+GO
+
+CREATE UNIQUE INDEX UX_Nursery_TaxNumber
+ON Nursery (tax_number)
+WHERE tax_number IS NOT NULL;
+GO
+
+CREATE UNIQUE INDEX UX_Bus_LicensePlate
+ON Bus (license_plate)
+WHERE license_plate IS NOT NULL;
+GO
+
+ALTER TABLE Discount
+ADD CONSTRAINT UQ_Discount_Nursery_Name
+UNIQUE (nursery_id, name);
+GO
+
+
+/* =========================================================
+   99. Approved status values (one CHECK per column)
+   Adding a new value is a business decision: update this list
+   and the Project Charter first.
+   ========================================================= */
+
+ALTER TABLE Child ADD CONSTRAINT CK_Child_Status
+CHECK (status IN ('Pending','Active','Inactive','Graduated'));
+GO
+ALTER TABLE Role ADD CONSTRAINT CK_Role_Status
+CHECK (status IN ('Active','Inactive'));
+GO
+ALTER TABLE UserAccount ADD CONSTRAINT CK_UserAccount_Type
+CHECK (account_type IN ('Staff','Guardian'));
+GO
+ALTER TABLE AcademicYear ADD CONSTRAINT CK_AcademicYear_Status
+CHECK (status IN ('Planned','Active','Closed'));
+GO
+ALTER TABLE Class ADD CONSTRAINT CK_Class_Status
+CHECK (status IN ('Active','Inactive'));
+GO
+ALTER TABLE Enrollment ADD CONSTRAINT CK_Enrollment_Status
+CHECK (status IN ('Pending','Active','Transferred','Withdrawn','Completed'));
+GO
+ALTER TABLE ClassAssignment ADD CONSTRAINT CK_ClassAssignment_Status
+CHECK (status IN ('Active','Ended'));
+GO
+ALTER TABLE Subject ADD CONSTRAINT CK_Subject_Status
+CHECK (status IN ('Active','Inactive'));
+GO
+ALTER TABLE Homework ADD CONSTRAINT CK_Homework_Status
+CHECK (status IN ('Assigned','Completed','Cancelled'));
+GO
+ALTER TABLE Activity ADD CONSTRAINT CK_Activity_Status
+CHECK (status IN ('Planned','Completed','Cancelled'));
+GO
+ALTER TABLE Attendance ADD CONSTRAINT CK_Attendance_Status
+CHECK (status IN ('Present','Late','Absent'));
+GO
+ALTER TABLE AuthorizedPickupPerson ADD CONSTRAINT CK_AuthorizedPickupPerson_Status
+CHECK (status IN ('Active','Inactive'));
+GO
+ALTER TABLE Pickup ADD CONSTRAINT CK_Pickup_Status
+CHECK (status IN ('Pending','Approved','Completed','Rejected'));
+GO
+ALTER TABLE Pickup ADD CONSTRAINT CK_Pickup_Type
+CHECK (pickup_type IN ('Regular','Early','Exception'));
+GO
+ALTER TABLE PickupApproval ADD CONSTRAINT CK_PickupApproval_Status
+CHECK (status IN ('Pending','Approved','Rejected'));
+GO
+ALTER TABLE Media ADD CONSTRAINT CK_Media_Status
+CHECK (status IN ('Active','Deleted'));
+GO
+ALTER TABLE Allergy ADD CONSTRAINT CK_Allergy_Severity
+CHECK (severity IN ('Mild','Moderate','Severe'));
+GO
+ALTER TABLE Allergy ADD CONSTRAINT CK_Allergy_Status
+CHECK (status IN ('Active','Inactive'));
+GO
+ALTER TABLE Medication ADD CONSTRAINT CK_Medication_Status
+CHECK (status IN ('Active','Completed','Stopped'));
+GO
+ALTER TABLE MedicationConsent ADD CONSTRAINT CK_MedicationConsent_Status
+CHECK (status IN ('Pending','Approved','Rejected'));
+GO
+ALTER TABLE FeeType ADD CONSTRAINT CK_FeeType_Status
+CHECK (status IN ('Active','Inactive'));
+GO
+ALTER TABLE Invoice ADD CONSTRAINT CK_Invoice_Status
+CHECK (status IN ('Pending','PartiallyPaid','Paid','Cancelled'));
+GO
+ALTER TABLE Discount ADD CONSTRAINT CK_Discount_Type
+CHECK (discount_type IN ('Percentage','Fixed'));
+GO
+ALTER TABLE Discount ADD CONSTRAINT CK_Discount_Status
+CHECK (status IN ('Active','Inactive'));
+GO
+ALTER TABLE Payment ADD CONSTRAINT CK_Payment_Method
+CHECK (payment_method IN ('Cash','BankTransfer','Card'));
+GO
+ALTER TABLE Payment ADD CONSTRAINT CK_Payment_Status
+CHECK (status IN ('Pending','Completed','Failed','Cancelled'));
+GO
+ALTER TABLE PaymentAttempt ADD CONSTRAINT CK_PaymentAttempt_Status
+CHECK (status IN ('Pending','Approved','Rejected'));
+GO
+ALTER TABLE Refund ADD CONSTRAINT CK_Refund_Status
+CHECK (status IN ('Pending','Completed','Rejected'));
+GO
+ALTER TABLE Receipt ADD CONSTRAINT CK_Receipt_Method
+CHECK (payment_method IN ('Cash','BankTransfer','Card'));
+GO
+ALTER TABLE Bus ADD CONSTRAINT CK_Bus_Status
+CHECK (status IN ('Active','Inactive','Maintenance'));
+GO
+ALTER TABLE Driver ADD CONSTRAINT CK_Driver_Status
+CHECK (status IN ('Active','Inactive'));
+GO
+ALTER TABLE BusSupervisor ADD CONSTRAINT CK_BusSupervisor_Status
+CHECK (status IN ('Active','Inactive'));
+GO
+ALTER TABLE TransportRoute ADD CONSTRAINT CK_TransportRoute_Status
+CHECK (status IN ('Active','Inactive'));
+GO
+ALTER TABLE TransportTrip ADD CONSTRAINT CK_TransportTrip_Type
+CHECK (trip_type IN ('Morning','Afternoon'));
+GO
+ALTER TABLE TransportTrip ADD CONSTRAINT CK_TransportTrip_Status
+CHECK (status IN ('Scheduled','InProgress','Completed','Cancelled'));
+GO
+ALTER TABLE TripChild ADD CONSTRAINT CK_TripChild_BoardingStatus
+CHECK (boarding_status IN ('Pending','Boarded','Absent','DroppedOff'));
+GO
+ALTER TABLE ChildTransportStop ADD CONSTRAINT CK_ChildTransportStop_Type
+CHECK (stop_type IN ('Pickup','Dropoff','Both'));
+GO
+ALTER TABLE ChildTransportStop ADD CONSTRAINT CK_ChildTransportStop_Status
+CHECK (status IN ('Active','Ended'));
+GO
+ALTER TABLE Event ADD CONSTRAINT CK_Event_Status
+CHECK (status IN ('Scheduled','Completed','Cancelled'));
+GO
+ALTER TABLE EventRegistration ADD CONSTRAINT CK_EventRegistration_Status
+CHECK (confirmation_status IN ('Pending','Confirmed','Declined'));
+GO
+ALTER TABLE EventAttendance ADD CONSTRAINT CK_EventAttendance_Status
+CHECK (attendance_status IN ('Present','Absent'));
+GO
+ALTER TABLE Notification ADD CONSTRAINT CK_Notification_Status
+CHECK (status IN ('Draft','Sent','Failed'));
+GO
+ALTER TABLE NotificationDelivery ADD CONSTRAINT CK_NotificationDelivery_Status
+CHECK (delivery_status IN ('Pending','Sent','Delivered','Read','Failed'));
+GO
+ALTER TABLE Holiday ADD CONSTRAINT CK_Holiday_Status
+CHECK (status IN ('Active','Inactive'));
 GO

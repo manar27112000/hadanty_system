@@ -1,28 +1,20 @@
-USE Hadanty;
-GO
+/* =========================================================
+   01_Database.sql
+   Creates the Hadanty database if it does not exist yet.
 
+   This script NEVER drops anything. To wipe and rebuild a
+   development database, use dev/reset_database.sql (it refuses
+   to run anywhere except the developer machine).
+   ========================================================= */
 
 USE master;
 GO
 
-IF DB_ID('Hadanty') IS NOT NULL
+IF DB_ID('Hadanty') IS NULL
 BEGIN
-    ALTER DATABASE Hadanty
-    SET SINGLE_USER
-    WITH ROLLBACK IMMEDIATE;
-
-    DROP DATABASE Hadanty;
+    CREATE DATABASE Hadanty;
+    PRINT 'Database Hadanty created.';
 END
-GO
-
-CREATE DATABASE Hadanty;
-GO
-
-SELECT name
-FROM sys.databases
-WHERE name = 'Hadanty';
-
-
-
-CREATE DATABASE Hadanty_MigrationLab;
+ELSE
+    PRINT 'Database Hadanty already exists. Nothing changed.';
 GO

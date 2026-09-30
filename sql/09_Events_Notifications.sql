@@ -7,7 +7,7 @@ GO
 -- =============================================
 
 CREATE TABLE Event (
-    event_id INT PRIMARY KEY,
+    event_id INT IDENTITY(1,1) PRIMARY KEY,
     branch_id INT NOT NULL,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(500),
@@ -16,7 +16,7 @@ CREATE TABLE Event (
     end_time TIME,
     location VARCHAR(255),
     cost DECIMAL(12,2),
-    status VARCHAR(20),
+    status VARCHAR(20) NOT NULL DEFAULT 'Scheduled',
 
     CONSTRAINT FK_Event_Branch
         FOREIGN KEY (branch_id)
@@ -32,10 +32,10 @@ GO
 -- =============================================
 
 CREATE TABLE EventRegistration (
-    registration_id INT PRIMARY KEY,
+    registration_id INT IDENTITY(1,1) PRIMARY KEY,
     event_id INT NOT NULL,
     child_id INT NOT NULL,
-    confirmation_status VARCHAR(50),
+    confirmation_status VARCHAR(50) NOT NULL DEFAULT 'Pending',
     registered_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
 
     CONSTRAINT FK_EventRegistration_Event
@@ -58,9 +58,9 @@ GO
 -- =============================================
 
 CREATE TABLE EventAttendance (
-    event_attendance_id INT PRIMARY KEY,
+    event_attendance_id INT IDENTITY(1,1) PRIMARY KEY,
     registration_id INT NOT NULL,
-    attendance_status VARCHAR(50),
+    attendance_status VARCHAR(50) NOT NULL,
     recorded_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
 
     CONSTRAINT FK_EventAttendance_Registration
@@ -79,7 +79,7 @@ GO
 -- =============================================
 
 CREATE TABLE NotificationType (
-    notification_type_id INT PRIMARY KEY,
+    notification_type_id INT IDENTITY(1,1) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(255),
     is_enabled BIT NOT NULL DEFAULT 1
@@ -93,16 +93,27 @@ GO
 -- =============================================
 
 CREATE TABLE Notification (
-    notification_id INT PRIMARY KEY,
+    notification_id INT IDENTITY(1,1) PRIMARY KEY,
+    nursery_id INT NOT NULL,
     notification_type_id INT NOT NULL,
+    child_id INT NULL,          -- the child the notification is about, if any
     title VARCHAR(200) NOT NULL,
     message VARCHAR(1000) NOT NULL,
     created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
-    status VARCHAR(20),
+    status VARCHAR(20) NOT NULL DEFAULT 'Draft',
+
+    CONSTRAINT FK_Notification_Nursery
+        FOREIGN KEY (nursery_id)
+        REFERENCES Nursery(nursery_id),
 
     CONSTRAINT FK_Notification_NotificationType
         FOREIGN KEY (notification_type_id)
-        REFERENCES NotificationType(notification_type_id)
+        REFERENCES NotificationType(notification_type_id),
+
+    -- A notification about a child must belong to that child's nursery
+    CONSTRAINT FK_Notification_Child
+        FOREIGN KEY (child_id, nursery_id)
+        REFERENCES Child(child_id, nursery_id)
 );
 GO
 
@@ -114,13 +125,13 @@ GO
 -- =============================================
 
 CREATE TABLE NotificationDelivery (
-    delivery_id INT PRIMARY KEY,
+    delivery_id INT IDENTITY(1,1) PRIMARY KEY,
     notification_id INT NOT NULL,
     account_id INT NOT NULL,
     sent_at DATETIME2,
     delivered_at DATETIME2,
     read_at DATETIME2,
-    delivery_status VARCHAR(50),
+    delivery_status VARCHAR(50) NOT NULL DEFAULT 'Pending',
 
     CONSTRAINT FK_NotificationDelivery_Notification
         FOREIGN KEY (notification_id)

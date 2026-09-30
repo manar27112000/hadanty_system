@@ -7,12 +7,12 @@ GO
 -- =============================================
 
 CREATE TABLE Bus (
-    bus_id INT PRIMARY KEY,
+    bus_id INT IDENTITY(1,1) PRIMARY KEY,
     branch_id INT NOT NULL,
     bus_number VARCHAR(50) NOT NULL,
-    license_plate VARCHAR(50) UNIQUE,
+    license_plate VARCHAR(50),
     capacity INT,
-    status VARCHAR(20),
+    status VARCHAR(20) NOT NULL DEFAULT 'Active',
 
     CONSTRAINT FK_Bus_Branch
         FOREIGN KEY (branch_id)
@@ -27,12 +27,12 @@ GO
 -- =============================================
 
 CREATE TABLE Driver (
-    driver_id INT PRIMARY KEY,
+    driver_id INT IDENTITY(1,1) PRIMARY KEY,
     branch_id INT NOT NULL,
     name VARCHAR(100) NOT NULL,
     phone VARCHAR(20),
     license_number VARCHAR(50),
-    status VARCHAR(20),
+    status VARCHAR(20) NOT NULL DEFAULT 'Active',
 
     CONSTRAINT FK_Driver_Branch
         FOREIGN KEY (branch_id)
@@ -47,11 +47,11 @@ GO
 -- =============================================
 
 CREATE TABLE BusSupervisor (
-    supervisor_id INT PRIMARY KEY,
+    supervisor_id INT IDENTITY(1,1) PRIMARY KEY,
     branch_id INT NOT NULL,
     name VARCHAR(100) NOT NULL,
     phone VARCHAR(20),
-    status VARCHAR(20),
+    status VARCHAR(20) NOT NULL DEFAULT 'Active',
 
     CONSTRAINT FK_BusSupervisor_Branch
         FOREIGN KEY (branch_id)
@@ -66,11 +66,11 @@ GO
 -- =============================================
 
 CREATE TABLE TransportRoute (
-    route_id INT PRIMARY KEY,
+    route_id INT IDENTITY(1,1) PRIMARY KEY,
     branch_id INT NOT NULL,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(255),
-    status VARCHAR(20),
+    status VARCHAR(20) NOT NULL DEFAULT 'Active',
 
     CONSTRAINT FK_TransportRoute_Branch
         FOREIGN KEY (branch_id)
@@ -85,7 +85,7 @@ GO
 -- =============================================
 
 CREATE TABLE TransportStop (
-    stop_id INT PRIMARY KEY,
+    stop_id INT IDENTITY(1,1) PRIMARY KEY,
     route_id INT NOT NULL,
     name VARCHAR(100) NOT NULL,
     address VARCHAR(255),
@@ -112,16 +112,16 @@ GO
 -- =============================================
 
 CREATE TABLE TransportTrip (
-    trip_id INT PRIMARY KEY,
+    trip_id INT IDENTITY(1,1) PRIMARY KEY,
     route_id INT NOT NULL,
     bus_id INT NOT NULL,
     driver_id INT NOT NULL,
     supervisor_id INT NOT NULL,
     trip_date DATE NOT NULL,
-    trip_type VARCHAR(50),
+    trip_type VARCHAR(50) NOT NULL,
     start_time DATETIME2,
     arrival_time DATETIME2,
-    status VARCHAR(20),
+    status VARCHAR(20) NOT NULL DEFAULT 'Scheduled',
 
     CONSTRAINT FK_TransportTrip_Route
         FOREIGN KEY (route_id)
@@ -148,10 +148,10 @@ GO
 -- =============================================
 
 CREATE TABLE TripChild (
-    trip_child_id INT PRIMARY KEY,
+    trip_child_id INT IDENTITY(1,1) PRIMARY KEY,
     trip_id INT NOT NULL,
     child_id INT NOT NULL,
-    boarding_status VARCHAR(50),
+    boarding_status VARCHAR(50) NOT NULL DEFAULT 'Pending',
     boarding_time DATETIME2,
     arrival_time DATETIME2,
     pickup_time DATETIME2,
@@ -177,13 +177,13 @@ GO
 -- =============================================
 
 CREATE TABLE ChildTransportStop (
-    child_transport_stop_id INT PRIMARY KEY,
+    child_transport_stop_id INT IDENTITY(1,1) PRIMARY KEY,
     child_id INT NOT NULL,
     stop_id INT NOT NULL,
-    stop_type VARCHAR(50),
+    stop_type VARCHAR(50) NOT NULL,
     start_date DATE,
     end_date DATE,
-    status VARCHAR(20),
+    status VARCHAR(20) NOT NULL DEFAULT 'Active',
 
     CONSTRAINT FK_ChildTransportStop_Child
         FOREIGN KEY (child_id)

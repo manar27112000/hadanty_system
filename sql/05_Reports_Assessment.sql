@@ -7,7 +7,7 @@ GO
 -- =============================================
 
 CREATE TABLE DailyReport (
-    daily_report_id INT PRIMARY KEY,
+    daily_report_id INT IDENTITY(1,1) PRIMARY KEY,
     child_id INT NOT NULL,
     report_date DATE NOT NULL,
     food VARCHAR(255),
@@ -32,7 +32,7 @@ GO
 -- =============================================
 
 CREATE TABLE DailyAssessment (
-    daily_assessment_id INT PRIMARY KEY,
+    daily_assessment_id INT IDENTITY(1,1) PRIMARY KEY,
     child_id INT NOT NULL,
     subject_id INT NOT NULL,
     assessment_date DATE NOT NULL,
@@ -57,7 +57,7 @@ GO
 -- =============================================
 
 CREATE TABLE MonthlyAssessment (
-    monthly_assessment_id INT PRIMARY KEY,
+    monthly_assessment_id INT IDENTITY(1,1) PRIMARY KEY,
     child_id INT NOT NULL,
     subject_id INT NOT NULL,
     month INT NOT NULL,
@@ -82,12 +82,12 @@ GO
 -- =============================================
 
 CREATE TABLE Media (
-    media_id INT PRIMARY KEY,
+    media_id INT IDENTITY(1,1) PRIMARY KEY,
     child_id INT NOT NULL,
     file_url VARCHAR(500) NOT NULL,
     file_type VARCHAR(50),
     uploaded_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
-    status VARCHAR(20),
+    status VARCHAR(20) NOT NULL DEFAULT 'Active',
 
     CONSTRAINT FK_Media_Child
         FOREIGN KEY (child_id)

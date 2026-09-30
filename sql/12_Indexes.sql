@@ -2,6 +2,10 @@
 USE Hadanty;
 GO
 
+-- Required by filtered indexes (SSMS has it ON by default, sqlcmd does not)
+SET QUOTED_IDENTIFIER ON;
+GO
+
 -- =============================================
 -- 3. Staff
 -- =============================================
@@ -18,12 +22,9 @@ GO
 
 -- =============================================
 -- 5. UserAccount
+-- No index on staff_id / guardian_id: UX_UserAccount_Staff and
+-- UX_UserAccount_Guardian (11_Constraints.sql) already provide them.
 -- =============================================
-CREATE INDEX IX_UserAccount_Staff
-ON UserAccount (staff_id);
-
-CREATE INDEX IX_UserAccount_Guardian
-ON UserAccount (guardian_id);
 GO
 -- =============================================
 -- 8. StaffBranch
@@ -302,3 +303,34 @@ CREATE INDEX IX_AuditLog_Entity
 ON AuditLog (entity_name, entity_id);
 GO
 
+
+
+-- =============================================
+-- New tables and tenant columns
+-- =============================================
+CREATE INDEX IX_Child_Nursery ON Child (nursery_id);
+GO
+CREATE INDEX IX_Staff_Nursery ON Staff (nursery_id);
+GO
+CREATE INDEX IX_Guardian_Nursery ON Guardian (nursery_id);
+GO
+CREATE INDEX IX_Enrollment_Nursery ON Enrollment (nursery_id);
+GO
+CREATE INDEX IX_ChildGuardian_Guardian ON ChildGuardian (guardian_id);
+GO
+CREATE INDEX IX_ClassStaff_Staff ON ClassStaff (staff_id);
+GO
+CREATE INDEX IX_ChildAuthorizedPickup_Person ON ChildAuthorizedPickup (authorized_person_id);
+GO
+CREATE INDEX IX_Pickup_AuthorizedPerson ON Pickup (authorized_person_id);
+GO
+CREATE INDEX IX_PickupApproval_Staff ON PickupApproval (approved_by_staff_id);
+GO
+CREATE INDEX IX_Invoice_Enrollment ON Invoice (enrollment_id);
+GO
+CREATE INDEX IX_Discount_Nursery ON Discount (nursery_id);
+GO
+CREATE INDEX IX_Notification_Nursery_Date ON Notification (nursery_id, created_at);
+GO
+CREATE INDEX IX_Notification_Child ON Notification (child_id) WHERE child_id IS NOT NULL;
+GO

@@ -7,13 +7,13 @@ GO
 -- =============================================
 
 CREATE TABLE Holiday (
-    holiday_id INT PRIMARY KEY,
+    holiday_id INT IDENTITY(1,1) PRIMARY KEY,
     branch_id INT NOT NULL,
     name VARCHAR(100) NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     description VARCHAR(255),
-    status VARCHAR(20),
+    status VARCHAR(20) NOT NULL DEFAULT 'Active',
 
     CONSTRAINT FK_Holiday_Branch
         FOREIGN KEY (branch_id)
@@ -28,7 +28,7 @@ GO
 -- =============================================
 
 CREATE TABLE WorkingHour (
-    working_hour_id INT PRIMARY KEY,
+    working_hour_id INT IDENTITY(1,1) PRIMARY KEY,
     branch_id INT NOT NULL,
     day_of_week INT NOT NULL,
     open_time TIME,
@@ -51,7 +51,7 @@ GO
 -- =============================================
 
 CREATE TABLE NurserySetting (
-    setting_id INT PRIMARY KEY,
+    setting_id INT IDENTITY(1,1) PRIMARY KEY,
     nursery_id INT NOT NULL,
     setting_key VARCHAR(100) NOT NULL,
     setting_value VARCHAR(1000),
@@ -73,7 +73,7 @@ GO
 -- =============================================
 
 CREATE TABLE BranchSetting (
-    branch_setting_id INT PRIMARY KEY,
+    branch_setting_id INT IDENTITY(1,1) PRIMARY KEY,
     branch_id INT NOT NULL,
     setting_key VARCHAR(100) NOT NULL,
     setting_value VARCHAR(1000),
@@ -92,11 +92,12 @@ GO
 -- =============================================
 -- 5. AuditLog
 -- UserAccount 1 : N AuditLog
+-- account_id NULL = the System itself (e.g. Auto Mark Absent)
 -- =============================================
 
 CREATE TABLE AuditLog (
-    audit_id INT PRIMARY KEY,
-    account_id INT NOT NULL,
+    audit_id INT IDENTITY(1,1) PRIMARY KEY,
+    account_id INT NULL,
     action VARCHAR(100) NOT NULL,
     entity_name VARCHAR(100) NOT NULL,
     entity_id INT NOT NULL,

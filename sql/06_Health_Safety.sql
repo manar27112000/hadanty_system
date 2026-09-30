@@ -7,7 +7,7 @@ GO
 -- =============================================
 
 CREATE TABLE HealthRecord (
-    health_record_id INT PRIMARY KEY,
+    health_record_id INT IDENTITY(1,1) PRIMARY KEY,
     child_id INT NOT NULL,
     medical_notes VARCHAR(1000),
     emergency_notes VARCHAR(1000),
@@ -29,12 +29,12 @@ GO
 -- =============================================
 
 CREATE TABLE Allergy (
-    allergy_id INT PRIMARY KEY,
+    allergy_id INT IDENTITY(1,1) PRIMARY KEY,
     health_record_id INT NOT NULL,
     allergy_name VARCHAR(100) NOT NULL,
-    severity VARCHAR(50),
+    severity VARCHAR(50) NOT NULL,
     notes VARCHAR(500),
-    status VARCHAR(20),
+    status VARCHAR(20) NOT NULL DEFAULT 'Active',
 
     CONSTRAINT FK_Allergy_HealthRecord
         FOREIGN KEY (health_record_id)
@@ -49,14 +49,14 @@ GO
 -- =============================================
 
 CREATE TABLE Medication (
-    medication_id INT PRIMARY KEY,
+    medication_id INT IDENTITY(1,1) PRIMARY KEY,
     health_record_id INT NOT NULL,
     medication_name VARCHAR(100) NOT NULL,
     dosage VARCHAR(100),
     start_date DATE,
     end_date DATE,
     instructions VARCHAR(1000),
-    status VARCHAR(20),
+    status VARCHAR(20) NOT NULL DEFAULT 'Active',
 
     CONSTRAINT FK_Medication_HealthRecord
         FOREIGN KEY (health_record_id)
@@ -71,10 +71,10 @@ GO
 -- =============================================
 
 CREATE TABLE MedicationConsent (
-    consent_id INT PRIMARY KEY,
+    consent_id INT IDENTITY(1,1) PRIMARY KEY,
     medication_id INT NOT NULL,
     consent_date DATE NOT NULL,
-    status VARCHAR(20),
+    status VARCHAR(20) NOT NULL DEFAULT 'Pending',
 
     CONSTRAINT FK_MedicationConsent_Medication
         FOREIGN KEY (medication_id)
@@ -93,7 +93,7 @@ GO
 -- =============================================
 
 CREATE TABLE Incident (
-    incident_id INT PRIMARY KEY,
+    incident_id INT IDENTITY(1,1) PRIMARY KEY,
     child_id INT NOT NULL,
     staff_id INT NOT NULL,
     incident_type VARCHAR(100),

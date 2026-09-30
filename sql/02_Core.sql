@@ -1,18 +1,29 @@
 USE Hadanty;
 GO
 
+/* =========================================================
+   02_Core.sql
+   Nursery, Branch, Staff, Guardian, Child, Users, Roles.
+
+   Tenant rule: every nursery-owned row carries nursery_id
+   (Child, Guardian, Staff), so one nursery can never see or
+   touch another nursery's people.
+   Role, Permission, Subject, FeeType and NotificationType are
+   platform-wide catalogs shared by all nurseries.
+   ========================================================= */
+
 -- =============================================
 -- 1. Nursery
 -- =============================================
 CREATE TABLE Nursery (
-    nursery_id INT PRIMARY KEY,
+    nursery_id INT IDENTITY(1,1) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    owner_name VARCHAR(100) ,
-    commercial_registration_no VARCHAR(50) UNIQUE,
-    tax_number VARCHAR(50) UNIQUE,
+    owner_name VARCHAR(100),
+    commercial_registration_no VARCHAR(50),
+    tax_number VARCHAR(50),
     address VARCHAR(255),
-    phone VARCHAR(20) ,
-    status VARCHAR(20),
+    phone VARCHAR(20),
+    status VARCHAR(20) NOT NULL DEFAULT 'Active',
     created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME()
 );
 GO
@@ -22,12 +33,12 @@ GO
 -- 2. Branch
 -- =============================================
 CREATE TABLE Branch (
-    branch_id INT PRIMARY KEY,
+    branch_id INT IDENTITY(1,1) PRIMARY KEY,
     nursery_id INT NOT NULL,
     name VARCHAR(100) NOT NULL,
     address VARCHAR(255),
     phone VARCHAR(20),
-    status VARCHAR(20),
+    status VARCHAR(20) NOT NULL DEFAULT 'Active',
     created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
 
     CONSTRAINT FK_Branch_Nursery
@@ -35,7 +46,11 @@ CREATE TABLE Branch (
         REFERENCES Nursery(nursery_id),
 
     CONSTRAINT UQ_Branch_Nursery_Name
-        UNIQUE (nursery_id, name)
+        UNIQUE (nursery_id, name),
+
+    -- Lets other tables prove "this branch belongs to this nursery"
+    CONSTRAINT UQ_Branch_Id_Nursery
+        UNIQUE (branch_id, nursery_id)
 );
 GO
 
@@ -44,17 +59,22 @@ GO
 -- 3. Staff
 -- =============================================
 CREATE TABLE Staff (
-    staff_id INT PRIMARY KEY,
+    staff_id INT IDENTITY(1,1) PRIMARY KEY,
+    nursery_id INT NOT NULL,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
-    national_id VARCHAR(50) UNIQUE,
+    national_id VARCHAR(50),
     phone VARCHAR(20),
     email VARCHAR(254),
     specialization VARCHAR(100),
     qualification VARCHAR(100),
     hire_date DATE,
-    employment_status VARCHAR(20),
-    created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME()
+    employment_status VARCHAR(20) NOT NULL DEFAULT 'Active',
+    created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+
+    CONSTRAINT FK_Staff_Nursery
+        FOREIGN KEY (nursery_id)
+        REFERENCES Nursery(nursery_id)
 );
 GO
 
@@ -63,23 +83,30 @@ GO
 -- 4. Guardian
 -- =============================================
 CREATE TABLE Guardian (
-    guardian_id INT PRIMARY KEY,
+    guardian_id INT IDENTITY(1,1) PRIMARY KEY,
+    nursery_id INT NOT NULL,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     phone VARCHAR(20),
     email VARCHAR(254),
     address VARCHAR(255),
-    status VARCHAR(20),
-    created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME()
+    status VARCHAR(20) NOT NULL DEFAULT 'Active',
+    created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+
+    CONSTRAINT FK_Guardian_Nursery
+        FOREIGN KEY (nursery_id)
+        REFERENCES Nursery(nursery_id)
 );
 GO
 
 
 -- =============================================
 -- 5. UserAccount
+-- Owned by a Staff member OR a Guardian, never both.
 -- =============================================
 CREATE TABLE UserAccount (
-    account_id INT PRIMARY KEY,
+    account_id INT IDENTITY(1,1) PRIMARY KEY,
+    account_type VARCHAR(20) NOT NULL,
     staff_id INT NULL,
     guardian_id INT NULL,
     username VARCHAR(100) NOT NULL UNIQUE,
@@ -98,31 +125,31 @@ CREATE TABLE UserAccount (
 
     CONSTRAINT CK_UserAccount_Owner
         CHECK (
-            (staff_id IS NOT NULL AND guardian_id IS NULL)
+            (account_type = 'Staff'    AND staff_id IS NOT NULL AND guardian_id IS NULL)
             OR
-            (staff_id IS NULL AND guardian_id IS NOT NULL)
+            (account_type = 'Guardian' AND guardian_id IS NOT NULL AND staff_id IS NULL)
         )
 );
 GO
 
 
 -- =============================================
--- 6. Role
+-- 6. Role  (platform-wide catalog)
 -- =============================================
 CREATE TABLE Role (
-    role_id INT PRIMARY KEY,
+    role_id INT IDENTITY(1,1) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(255),
-    status VARCHAR(20)
+    status VARCHAR(20) NOT NULL DEFAULT 'Active'
 );
 GO
 
 
 -- =============================================
--- 7. Permission
+-- 7. Permission  (platform-wide catalog)
 -- =============================================
 CREATE TABLE Permission (
-    permission_id INT PRIMARY KEY,
+    permission_id INT IDENTITY(1,1) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(255),
     module VARCHAR(100)
@@ -132,6 +159,7 @@ GO
 
 -- =============================================
 -- 8. StaffBranch
+-- Staff M : N Branch
 -- =============================================
 CREATE TABLE StaffBranch (
     staff_id INT NOT NULL,
@@ -152,6 +180,7 @@ GO
 
 -- =============================================
 -- 9. AccountRole
+-- UserAccount M : N Role, per branch
 -- =============================================
 CREATE TABLE AccountRole (
     account_id INT NOT NULL,
@@ -177,6 +206,7 @@ GO
 
 -- =============================================
 -- 10. RolePermission
+-- Role M : N Permission
 -- =============================================
 CREATE TABLE RolePermission (
     role_id INT NOT NULL,
@@ -194,18 +224,48 @@ CREATE TABLE RolePermission (
 );
 GO
 
+
 -- =============================================
 -- 11. Child
 -- =============================================
 CREATE TABLE Child (
-    child_id INT PRIMARY KEY,
+    child_id INT IDENTITY(1,1) PRIMARY KEY,
+    nursery_id INT NOT NULL,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
-    national_id VARCHAR(50) UNIQUE,
+    national_id VARCHAR(50),
     date_of_birth DATE NOT NULL,
     gender VARCHAR(20),
-    status VARCHAR(20),
+    status VARCHAR(20) NOT NULL DEFAULT 'Active',
     created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
-    updated_at DATETIME2 NULL
+    updated_at DATETIME2 NULL,
+
+    CONSTRAINT FK_Child_Nursery
+        FOREIGN KEY (nursery_id)
+        REFERENCES Nursery(nursery_id),
+
+    CONSTRAINT UQ_Child_Id_Nursery
+        UNIQUE (child_id, nursery_id)
+);
+GO
+
+
+-- =============================================
+-- 12. ChildGuardian
+-- Child M : N Guardian
+-- =============================================
+CREATE TABLE ChildGuardian (
+    child_id INT NOT NULL,
+    guardian_id INT NOT NULL,
+
+    PRIMARY KEY (child_id, guardian_id),
+
+    CONSTRAINT FK_ChildGuardian_Child
+        FOREIGN KEY (child_id)
+        REFERENCES Child(child_id),
+
+    CONSTRAINT FK_ChildGuardian_Guardian
+        FOREIGN KEY (guardian_id)
+        REFERENCES Guardian(guardian_id)
 );
 GO
