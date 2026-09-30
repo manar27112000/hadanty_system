@@ -1,0 +1,16 @@
+USE Hadanty_MigrationLab;
+GO
+
+SELECT
+    COLUMN_NAME,
+    DATA_TYPE
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME = 'children1'
+ORDER BY ORDINAL_POSITION;
+
+
+USE Hadanty_MigrationLab;
+GO
+
+SELECT *
+FROM dbo.children1;

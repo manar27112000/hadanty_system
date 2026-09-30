@@ -21,3 +21,8 @@ GO
 SELECT name
 FROM sys.databases
 WHERE name = 'Hadanty';
+
+
+
+CREATE DATABASE Hadanty_MigrationLab;
+GO

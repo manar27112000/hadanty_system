@@ -1,0 +1,7 @@
+﻿"child_id,first_name,last_name,national_id,date_of_birth,gender,status"
+"5001,Mohamed,Ali,301234567908,2020-05-10,Male,Active"
+"5002,Sara,Hassan,301234567909,2019-08-15,Female,Active"
+"5003,Ahmed,,301234567910,2021-02-20,Male,Active"
+"5004,Laila,Mohamed,301234567911,2020-13-40,Female,Active"
+"5005,Omar,Adel,301234567912,2020-06-12,Unknown,Active"
+"5006,Nour,Hassan,301234567913,2019-09-05,Female,"
