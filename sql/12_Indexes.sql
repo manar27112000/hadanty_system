@@ -337,3 +337,54 @@ GO
 
 CREATE INDEX IX_Attendance_Enrollment ON Attendance (enrollment_id);
 GO
+
+
+-- =============================================
+-- Added in milestone M0
+-- (Columns already covered by a primary key or a UNIQUE constraint
+--  are not repeated here.)
+-- =============================================
+CREATE INDEX IX_AuthorizedPickupPerson_Nursery ON AuthorizedPickupPerson (nursery_id);
+GO
+CREATE INDEX IX_BlockedPickupPerson_Child_Status ON BlockedPickupPerson (child_id, status);
+GO
+CREATE INDEX IX_BlockedPickupPerson_Staff ON BlockedPickupPerson (blocked_by_staff_id);
+GO
+CREATE INDEX IX_PickupCode_ChildPerson ON PickupCode (child_id, authorized_person_id);
+GO
+CREATE INDEX IX_PickupCode_Status_Expires ON PickupCode (status, expires_at);
+GO
+CREATE INDEX IX_PickupCode_Account ON PickupCode (created_by_account_id);
+GO
+CREATE INDEX IX_MedicationLog_Medication_Time ON MedicationLog (medication_id, given_at);
+GO
+CREATE INDEX IX_MedicationLog_Staff ON MedicationLog (given_by_staff_id);
+GO
+CREATE INDEX IX_DailyAssessment_Level ON DailyAssessment (level_id);
+GO
+CREATE INDEX IX_MonthlyAssessment_Level ON MonthlyAssessment (level_id);
+GO
+CREATE INDEX IX_FeePlanItem_FeeType ON FeePlanItem (fee_type_id);
+GO
+CREATE INDEX IX_Enrollment_FeePlan ON Enrollment (fee_plan_id) WHERE fee_plan_id IS NOT NULL;
+GO
+CREATE INDEX IX_Invoice_BillingRun ON Invoice (billing_run_id) WHERE billing_run_id IS NOT NULL;
+GO
+CREATE INDEX IX_BillingRun_Account ON BillingRun (started_by_account_id) WHERE started_by_account_id IS NOT NULL;
+GO
+CREATE INDEX IX_NotificationPreference_Type ON NotificationPreference (notification_type_id);
+GO
+CREATE INDEX IX_TransportTrip_Branch_Date ON TransportTrip (branch_id, trip_date);
+GO
+
+
+-- =============================================
+-- From the original file
+-- =============================================
+CREATE INDEX IX_DailyAssessment_Child_Date
+ON DailyAssessment (child_id, assessment_date);
+GO
+
+CREATE INDEX IX_MonthlyAssessment_Child_Year_Month
+ON MonthlyAssessment (child_id, year, month);
+GO

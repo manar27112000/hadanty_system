@@ -682,8 +682,10 @@ GO
 ALTER TABLE Discount ADD CONSTRAINT CK_Discount_Status
 CHECK (status IN ('Active','Inactive'));
 GO
+-- Version 1 takes cash, e-wallet, Instapay and bank transfer.
+-- 'Card' stays allowed but unused until a card gateway is added.
 ALTER TABLE Payment ADD CONSTRAINT CK_Payment_Method
-CHECK (payment_method IN ('Cash','BankTransfer','Card'));
+CHECK (payment_method IN ('Cash','BankTransfer','Wallet','Instapay','Card'));
 GO
 ALTER TABLE Payment ADD CONSTRAINT CK_Payment_Status
 CHECK (status IN ('Pending','Completed','Failed','Cancelled'));
@@ -738,4 +740,199 @@ CHECK (delivery_status IN ('Pending','Sent','Delivered','Read','Failed'));
 GO
 ALTER TABLE Holiday ADD CONSTRAINT CK_Holiday_Status
 CHECK (status IN ('Active','Inactive'));
+GO
+
+
+/* =========================================================
+   100. Added in milestone M0
+   ========================================================= */
+
+-- ---- People and pickup -------------------------------------------------
+
+-- One financial responsible guardian at most, per child
+CREATE UNIQUE INDEX UX_ChildGuardian_OneFinancialPerChild
+ON ChildGuardian (child_id)
+WHERE is_financial_responsible = 1;
+GO
+
+ALTER TABLE ChildGuardian ADD CONSTRAINT CK_ChildGuardian_Relationship
+CHECK (relationship_type IN ('Father','Mother','Guardian','Grandparent','Other'));
+GO
+
+-- A child who is anonymized must have a leaving date
+ALTER TABLE Child ADD CONSTRAINT CK_Child_Retention
+CHECK (anonymized_at IS NULL OR left_at IS NOT NULL);
+GO
+
+-- The pickup person is either a guardian (name and phone read from Guardian)
+-- or someone else (name required). Never both, never neither.
+ALTER TABLE AuthorizedPickupPerson ADD CONSTRAINT CK_AuthorizedPickupPerson_Identity
+CHECK (
+    (guardian_id IS NOT NULL AND name IS NULL AND phone IS NULL)
+    OR
+    (guardian_id IS NULL AND name IS NOT NULL)
+);
+GO
+
+-- A guardian is registered as a pickup person only once
+CREATE UNIQUE INDEX UX_AuthorizedPickupPerson_Guardian
+ON AuthorizedPickupPerson (guardian_id)
+WHERE guardian_id IS NOT NULL;
+GO
+
+ALTER TABLE BlockedPickupPerson ADD CONSTRAINT CK_BlockedPickupPerson_Status
+CHECK (
+    (status = 'Active' AND lifted_at IS NULL)
+    OR
+    (status = 'Lifted' AND lifted_at IS NOT NULL)
+);
+GO
+
+ALTER TABLE PickupCode ADD CONSTRAINT CK_PickupCode_Status
+CHECK (
+    (status = 'Active'    AND used_at IS NULL)
+    OR (status = 'Used'   AND used_at IS NOT NULL)
+    OR (status IN ('Expired','Cancelled') AND used_at IS NULL)
+);
+GO
+
+ALTER TABLE PickupCode ADD CONSTRAINT CK_PickupCode_Times
+CHECK (expires_at > created_at);
+GO
+
+-- Absence reason only makes sense for an absence
+ALTER TABLE Attendance ADD CONSTRAINT CK_Attendance_AbsenceReason
+CHECK (absence_reason IS NULL OR status = 'Absent');
+GO
+
+-- Re-enrollment confirmation: who and when come together
+ALTER TABLE Enrollment ADD CONSTRAINT CK_Enrollment_Confirmation
+CHECK (
+    (confirmed_by_guardian_id IS NULL AND confirmed_at IS NULL)
+    OR
+    (confirmed_by_guardian_id IS NOT NULL AND confirmed_at IS NOT NULL)
+);
+GO
+
+-- ---- Assessment and media ----------------------------------------------
+
+ALTER TABLE AssessmentLevel ADD CONSTRAINT CK_AssessmentLevel_Status
+CHECK (status IN ('Active','Inactive'));
+GO
+
+ALTER TABLE AssessmentLevel ADD CONSTRAINT UQ_AssessmentLevel_Nursery_Name
+UNIQUE (nursery_id, name);
+GO
+
+ALTER TABLE AssessmentLevel ADD CONSTRAINT UQ_AssessmentLevel_Nursery_Sort
+UNIQUE (nursery_id, sort_order);
+GO
+
+ALTER TABLE MediaConsent ADD CONSTRAINT CK_MediaConsent_Scope
+CHECK (scope IN ('ClassOnly','AllParents','Public'));
+GO
+
+ALTER TABLE MediaConsent ADD CONSTRAINT CK_MediaConsent_Dates
+CHECK (revoked_at IS NULL OR revoked_at >= given_at);
+GO
+
+-- A child has at most one active (not withdrawn) consent
+CREATE UNIQUE INDEX UX_MediaConsent_OneActivePerChild
+ON MediaConsent (child_id)
+WHERE revoked_at IS NULL;
+GO
+
+-- ---- Finance -------------------------------------------------------------
+
+ALTER TABLE FeePlan ADD CONSTRAINT CK_FeePlan_Cycle
+CHECK (billing_cycle IN ('Monthly'));
+GO
+
+ALTER TABLE FeePlan ADD CONSTRAINT CK_FeePlan_Status
+CHECK (status IN ('Active','Inactive'));
+GO
+
+ALTER TABLE FeePlanItem ADD CONSTRAINT CK_FeePlanItem_Amount
+CHECK (amount >= 0);
+GO
+
+ALTER TABLE BillingRun ADD CONSTRAINT CK_BillingRun_Status
+CHECK (status IN ('Running','Completed','Failed'));
+GO
+
+ALTER TABLE BillingRun ADD CONSTRAINT CK_BillingRun_PeriodFirstDay
+CHECK (DAY(billing_period) = 1);
+GO
+
+ALTER TABLE BillingRun ADD CONSTRAINT CK_BillingRun_Count
+CHECK (invoices_created >= 0);
+GO
+
+-- billing_run_id and billing_period are set together (automatic invoices) or both empty
+ALTER TABLE Invoice ADD CONSTRAINT CK_Invoice_BillingPair
+CHECK (
+    (billing_run_id IS NULL AND billing_period IS NULL)
+    OR
+    (billing_run_id IS NOT NULL AND billing_period IS NOT NULL)
+);
+GO
+
+ALTER TABLE Invoice ADD CONSTRAINT CK_Invoice_PeriodFirstDay
+CHECK (billing_period IS NULL OR DAY(billing_period) = 1);
+GO
+
+-- The same child is never billed twice for the same month
+CREATE UNIQUE INDEX UX_Invoice_OnePerEnrollmentPeriod
+ON Invoice (enrollment_id, billing_period)
+WHERE billing_period IS NOT NULL;
+GO
+
+-- A registration pays through one invoice item, and an item pays one registration
+CREATE UNIQUE INDEX UX_EventRegistration_InvoiceItem
+ON EventRegistration (invoice_item_id)
+WHERE invoice_item_id IS NOT NULL;
+GO
+
+-- ---- Notifications --------------------------------------------------------
+
+ALTER TABLE NotificationDelivery ADD CONSTRAINT CK_NotificationDelivery_Channel
+CHECK (channel IN ('Push','Email','WhatsApp'));
+GO
+
+ALTER TABLE NotificationTemplate ADD CONSTRAINT CK_NotificationTemplate_Channel
+CHECK (channel IN ('Push','Email','WhatsApp'));
+GO
+
+ALTER TABLE NotificationTemplate ADD CONSTRAINT CK_NotificationTemplate_Language
+CHECK (language IN ('ar','en'));
+GO
+
+ALTER TABLE NotificationPreference ADD CONSTRAINT CK_NotificationPreference_Channel
+CHECK (channel IN ('Push','Email','WhatsApp'));
+GO
+
+
+
+/* =========================================================
+   101. Holiday and WorkingHour checks (from the original file)
+   ========================================================= */
+
+ALTER TABLE Holiday
+ADD CONSTRAINT CK_Holiday_Dates
+CHECK (end_date >= start_date);
+GO
+
+ALTER TABLE WorkingHour
+ADD CONSTRAINT CK_WorkingHour_DayOfWeek
+CHECK (day_of_week BETWEEN 1 AND 7);
+GO
+
+ALTER TABLE WorkingHour
+ADD CONSTRAINT CK_WorkingHour_Times
+CHECK (
+    is_working_day = 0
+    OR open_time IS NULL
+    OR close_time IS NULL
+    OR close_time > open_time
+);
 GO
