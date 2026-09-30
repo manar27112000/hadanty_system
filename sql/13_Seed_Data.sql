@@ -410,16 +410,16 @@ GO
    Child 6 is Absent and has no check-in.
    ========================================================= */
 SET IDENTITY_INSERT Attendance ON;
-INSERT INTO Attendance (attendance_id, child_id, attendance_date, status)
+INSERT INTO Attendance (attendance_id, enrollment_id, child_id, attendance_date, status)
 VALUES
-(1, 1, '2026-09-21', 'Present'),
-(2, 2, '2026-09-21', 'Present'),
-(3, 3, '2026-09-21', 'Late'),
-(4, 4, '2026-09-21', 'Present'),
-(5, 5, '2026-09-21', 'Present'),
-(6, 6, '2026-09-21', 'Absent'),
-(7, 7, '2026-09-21', 'Present'),
-(8, 8, '2026-09-21', 'Late');
+(1, 1, 1, '2026-09-21', 'Present'),
+(2, 2, 2, '2026-09-21', 'Present'),
+(3, 3, 3, '2026-09-21', 'Late'),
+(4, 4, 4, '2026-09-21', 'Present'),
+(5, 5, 5, '2026-09-21', 'Present'),
+(6, 6, 6, '2026-09-21', 'Absent'),
+(7, 7, 7, '2026-09-21', 'Present'),
+(8, 8, 8, '2026-09-21', 'Late');
 SET IDENTITY_INSERT Attendance OFF;
 GO
 
@@ -493,18 +493,20 @@ GO
    26. Pickup
    Pickup 4: early pickup of child 4 (needs approval).
    Pickup 6: exception pickup, person NOT on the authorized list
-             (authorized_person_id is NULL, needs approval).
+             (authorized_person_id is NULL, name typed in, needs approval).
+   The receiver is stored once: either the authorized person id
+   or the typed name, never both.
    ========================================================= */
 SET IDENTITY_INSERT Pickup ON;
 INSERT INTO Pickup
 (pickup_id, child_id, authorized_person_id, pickup_person_name, pickup_type, pickup_time, status)
 VALUES
-(1, 3, 2,    'Sara Hassan',     'Regular',   '2026-09-21 15:00:00', 'Completed'),
-(2, 5, 3,    'Khaled Mahmoud',  'Regular',   '2026-09-21 15:10:00', 'Completed'),
-(3, 7, 5,    'Youssef Ibrahim', 'Regular',   '2026-09-21 15:00:00', 'Completed'),
-(4, 4, 3,    'Khaled Mahmoud',  'Early',     '2026-09-21 13:30:00', 'Completed'),
-(5, 8, 5,    'Youssef Ibrahim', 'Regular',   '2026-09-21 15:15:00', 'Completed'),
-(6, 7, NULL, 'Hany Ibrahim',    'Exception', '2026-09-22 15:00:00', 'Approved');
+(1, 3, 2,    NULL,           'Regular',   '2026-09-21 15:00:00', 'Completed'),
+(2, 5, 3,    NULL,           'Regular',   '2026-09-21 15:10:00', 'Completed'),
+(3, 7, 5,    NULL,           'Regular',   '2026-09-21 15:00:00', 'Completed'),
+(4, 4, 3,    NULL,           'Early',     '2026-09-21 13:30:00', 'Completed'),
+(5, 8, 5,    NULL,           'Regular',   '2026-09-21 15:15:00', 'Completed'),
+(6, 7, NULL, 'Hany Ibrahim', 'Exception', '2026-09-22 15:00:00', 'Completed');
 SET IDENTITY_INSERT Pickup OFF;
 GO
 
@@ -515,10 +517,10 @@ GO
    ========================================================= */
 SET IDENTITY_INSERT PickupApproval ON;
 INSERT INTO PickupApproval
-(approval_id, pickup_id, authorized_person_name, approved_by_staff_id, approval_time, status)
+(approval_id, pickup_id, approved_by_staff_id, approval_time, status)
 VALUES
-(1, 4, 'Khaled Mahmoud', 4, '2026-09-21 13:20:00', 'Approved'),
-(2, 6, 'Hany Ibrahim',   4, '2026-09-22 14:40:00', 'Approved');
+(1, 4, 4, '2026-09-21 13:20:00', 'Approved'),
+(2, 6, 4, '2026-09-22 14:40:00', 'Approved');
 SET IDENTITY_INSERT PickupApproval OFF;
 GO
 
@@ -797,12 +799,12 @@ GO
    ========================================================= */
 SET IDENTITY_INSERT Receipt ON;
 INSERT INTO Receipt
-(receipt_id, payment_id, receipt_number, amount, issued_at, payment_method, transaction_number)
+(receipt_id, payment_id, receipt_number, issued_at)
 VALUES
-(1, 1, 'REC10001', 1900.00, '2026-09-05 10:05:00', 'Cash',         'TXN10001'),
-(2, 2, 'REC10002', 2000.00, '2026-09-05 12:05:00', 'BankTransfer', 'TXN10002'),
-(3, 3, 'REC10003', 1000.00, '2026-09-06 12:05:00', 'Cash',         'TXN10003'),
-(4, 4, 'REC10004', 2400.00, '2026-09-05 14:05:00', 'Card',         'TXN10004');
+(1, 1, 'REC10001', '2026-09-05 10:05:00'),
+(2, 2, 'REC10002', '2026-09-05 12:05:00'),
+(3, 3, 'REC10003', '2026-09-06 12:05:00'),
+(4, 4, 'REC10004', '2026-09-05 14:05:00');
 SET IDENTITY_INSERT Receipt OFF;
 GO
 
@@ -887,13 +889,13 @@ GO
    ========================================================= */
 SET IDENTITY_INSERT TransportTrip ON;
 INSERT INTO TransportTrip
-(trip_id, route_id, bus_id, driver_id, supervisor_id, trip_date, trip_type, start_time, arrival_time, status)
+(trip_id, branch_id, route_id, bus_id, driver_id, supervisor_id, trip_date, trip_type, start_time, arrival_time, status)
 VALUES
-(1, 1, 1, 1, 1, '2026-09-21', 'Morning',   '2026-09-21 07:00:00', '2026-09-21 08:00:00', 'Completed'),
-(2, 1, 1, 1, 1, '2026-09-21', 'Afternoon', '2026-09-21 15:00:00', '2026-09-21 16:00:00', 'Completed'),
-(3, 2, 2, 2, 2, '2026-09-21', 'Morning',   '2026-09-21 07:00:00', '2026-09-21 08:00:00', 'Completed'),
-(4, 3, 3, 3, 3, '2026-09-21', 'Morning',   '2026-09-21 07:00:00', '2026-09-21 08:00:00', 'Completed'),
-(5, 4, 4, 4, 4, '2026-09-21', 'Morning',   '2026-09-21 07:00:00', '2026-09-21 08:00:00', 'Completed');
+(1, 1, 1, 1, 1, 1, '2026-09-21', 'Morning',   '2026-09-21 07:00:00', '2026-09-21 08:00:00', 'Completed'),
+(2, 1, 1, 1, 1, 1, '2026-09-21', 'Afternoon', '2026-09-21 15:00:00', '2026-09-21 16:00:00', 'Completed'),
+(3, 2, 2, 2, 2, 2, '2026-09-21', 'Morning',   '2026-09-21 07:00:00', '2026-09-21 08:00:00', 'Completed'),
+(4, 3, 3, 3, 3, 3, '2026-09-21', 'Morning',   '2026-09-21 07:00:00', '2026-09-21 08:00:00', 'Completed'),
+(5, 4, 4, 4, 4, 4, '2026-09-21', 'Morning',   '2026-09-21 07:00:00', '2026-09-21 08:00:00', 'Completed');
 SET IDENTITY_INSERT TransportTrip OFF;
 GO
 

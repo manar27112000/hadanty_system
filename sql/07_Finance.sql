@@ -201,16 +201,15 @@ GO
 -- =============================================
 -- 10. Receipt
 -- Payment 1 : 0..1 Receipt
+-- The amount, method and transaction number live only in Payment.
+-- A receipt is printed by joining Payment, so the two can never disagree.
 -- =============================================
 
 CREATE TABLE Receipt (
     receipt_id INT IDENTITY(1,1) PRIMARY KEY,
     payment_id INT NOT NULL,
     receipt_number VARCHAR(100) NOT NULL,
-    amount DECIMAL(12,2) NOT NULL,
     issued_at DATETIME2 NOT NULL,
-    payment_method VARCHAR(50) NOT NULL,
-    transaction_number VARCHAR(100),
 
     CONSTRAINT FK_Receipt_Payment
         FOREIGN KEY (payment_id)

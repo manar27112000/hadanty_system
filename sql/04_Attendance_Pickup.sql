@@ -12,16 +12,21 @@ GO
 -- =============================================
 -- 1. Attendance
 -- =============================================
+-- Every attendance row belongs to an enrollment, so the branch and
+-- (through ClassAssignment dates) the class on that day are never guessed.
+-- child_id is kept next to enrollment_id and the composite key below
+-- guarantees they always agree.
 CREATE TABLE Attendance (
     attendance_id INT IDENTITY(1,1) PRIMARY KEY,
+    enrollment_id INT NOT NULL,
     child_id INT NOT NULL,
     attendance_date DATE NOT NULL,
     status VARCHAR(20) NOT NULL,
     created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
 
-    CONSTRAINT FK_Attendance_Child
-        FOREIGN KEY (child_id)
-        REFERENCES Child(child_id)
+    CONSTRAINT FK_Attendance_Enrollment
+        FOREIGN KEY (enrollment_id, child_id)
+        REFERENCES Enrollment(enrollment_id, child_id)
 );
 GO
 
@@ -102,15 +107,16 @@ GO
 
 -- =============================================
 -- 6. Pickup
--- authorized_person_id is NULL for an exception pickup
--- (someone not on the authorized list). In that case the
--- receiver name is required and PickupApproval is required.
+-- The receiver is stored exactly once:
+--   on the authorized list  -> authorized_person_id (name lives in AuthorizedPickupPerson)
+--   exception pickup        -> pickup_person_name only (and PickupApproval is required)
+-- The CHECK in 11_Constraints.sql enforces "one or the other, never both".
 -- =============================================
 CREATE TABLE Pickup (
     pickup_id INT IDENTITY(1,1) PRIMARY KEY,
     child_id INT NOT NULL,
     authorized_person_id INT NULL,
-    pickup_person_name VARCHAR(100) NOT NULL,
+    pickup_person_name VARCHAR(100) NULL,
     pickup_type VARCHAR(50) NOT NULL,
     pickup_time DATETIME2 NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'Pending',
@@ -134,7 +140,6 @@ GO
 CREATE TABLE PickupApproval (
     approval_id INT IDENTITY(1,1) PRIMARY KEY,
     pickup_id INT NOT NULL,
-    authorized_person_name VARCHAR(100),
     approved_by_staff_id INT NOT NULL,
     approval_time DATETIME2 NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'Pending',

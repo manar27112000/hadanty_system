@@ -334,3 +334,6 @@ CREATE INDEX IX_Notification_Nursery_Date ON Notification (nursery_id, created_a
 GO
 CREATE INDEX IX_Notification_Child ON Notification (child_id) WHERE child_id IS NOT NULL;
 GO
+
+CREATE INDEX IX_Attendance_Enrollment ON Attendance (enrollment_id);
+GO

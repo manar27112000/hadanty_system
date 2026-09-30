@@ -11,12 +11,15 @@ CREATE TABLE Bus (
     branch_id INT NOT NULL,
     bus_number VARCHAR(50) NOT NULL,
     license_plate VARCHAR(50),
-    capacity INT,
+    capacity INT NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'Active',
 
     CONSTRAINT FK_Bus_Branch
         FOREIGN KEY (branch_id)
-        REFERENCES Branch(branch_id)
+        REFERENCES Branch(branch_id),
+
+    CONSTRAINT UQ_Bus_Id_Branch
+        UNIQUE (bus_id, branch_id)
 );
 GO
 
@@ -36,7 +39,10 @@ CREATE TABLE Driver (
 
     CONSTRAINT FK_Driver_Branch
         FOREIGN KEY (branch_id)
-        REFERENCES Branch(branch_id)
+        REFERENCES Branch(branch_id),
+
+    CONSTRAINT UQ_Driver_Id_Branch
+        UNIQUE (driver_id, branch_id)
 );
 GO
 
@@ -55,7 +61,10 @@ CREATE TABLE BusSupervisor (
 
     CONSTRAINT FK_BusSupervisor_Branch
         FOREIGN KEY (branch_id)
-        REFERENCES Branch(branch_id)
+        REFERENCES Branch(branch_id),
+
+    CONSTRAINT UQ_BusSupervisor_Id_Branch
+        UNIQUE (supervisor_id, branch_id)
 );
 GO
 
@@ -74,7 +83,10 @@ CREATE TABLE TransportRoute (
 
     CONSTRAINT FK_TransportRoute_Branch
         FOREIGN KEY (branch_id)
-        REFERENCES Branch(branch_id)
+        REFERENCES Branch(branch_id),
+
+    CONSTRAINT UQ_TransportRoute_Id_Branch
+        UNIQUE (route_id, branch_id)
 );
 GO
 
@@ -109,10 +121,13 @@ GO
 -- Bus 1 : N Trip
 -- Driver 1 : N Trip
 -- BusSupervisor 1 : N Trip
+-- A trip's route, bus, driver and supervisor must all belong to the
+-- same branch. The composite keys below enforce it.
 -- =============================================
 
 CREATE TABLE TransportTrip (
     trip_id INT IDENTITY(1,1) PRIMARY KEY,
+    branch_id INT NOT NULL,
     route_id INT NOT NULL,
     bus_id INT NOT NULL,
     driver_id INT NOT NULL,
@@ -124,20 +139,20 @@ CREATE TABLE TransportTrip (
     status VARCHAR(20) NOT NULL DEFAULT 'Scheduled',
 
     CONSTRAINT FK_TransportTrip_Route
-        FOREIGN KEY (route_id)
-        REFERENCES TransportRoute(route_id),
+        FOREIGN KEY (route_id, branch_id)
+        REFERENCES TransportRoute(route_id, branch_id),
 
     CONSTRAINT FK_TransportTrip_Bus
-        FOREIGN KEY (bus_id)
-        REFERENCES Bus(bus_id),
+        FOREIGN KEY (bus_id, branch_id)
+        REFERENCES Bus(bus_id, branch_id),
 
     CONSTRAINT FK_TransportTrip_Driver
-        FOREIGN KEY (driver_id)
-        REFERENCES Driver(driver_id),
+        FOREIGN KEY (driver_id, branch_id)
+        REFERENCES Driver(driver_id, branch_id),
 
     CONSTRAINT FK_TransportTrip_Supervisor
-        FOREIGN KEY (supervisor_id)
-        REFERENCES BusSupervisor(supervisor_id)
+        FOREIGN KEY (supervisor_id, branch_id)
+        REFERENCES BusSupervisor(supervisor_id, branch_id)
 );
 GO
 

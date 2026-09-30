@@ -404,9 +404,7 @@ GO
    32. Receipt
    ========================================================= */
 
-ALTER TABLE Receipt
-ADD CONSTRAINT CK_Receipt_Amount
-CHECK (amount > 0);
+-- Receipt has no amount or method of its own: they come from Payment.
 GO
 
 
@@ -628,8 +626,28 @@ GO
 ALTER TABLE AuthorizedPickupPerson ADD CONSTRAINT CK_AuthorizedPickupPerson_Status
 CHECK (status IN ('Active','Inactive'));
 GO
+-- Approval state lives only in PickupApproval; Pickup just says whether it happened.
 ALTER TABLE Pickup ADD CONSTRAINT CK_Pickup_Status
-CHECK (status IN ('Pending','Approved','Completed','Rejected'));
+CHECK (status IN ('Pending','Completed','Cancelled'));
+GO
+
+-- Receiver stored once: authorized person OR a free-text name (exception pickup)
+ALTER TABLE Pickup ADD CONSTRAINT CK_Pickup_ReceiverOnce
+CHECK (
+    (authorized_person_id IS NOT NULL AND pickup_person_name IS NULL)
+    OR
+    (authorized_person_id IS NULL AND pickup_person_name IS NOT NULL)
+);
+GO
+
+-- An exception pickup (nobody on the authorized list) must be typed 'Exception'
+ALTER TABLE Pickup ADD CONSTRAINT CK_Pickup_ExceptionType
+CHECK (authorized_person_id IS NOT NULL OR pickup_type = 'Exception');
+GO
+
+-- Item total is derived from its own row: no chance for it to drift
+ALTER TABLE InvoiceItem ADD CONSTRAINT CK_InvoiceItem_TotalFormula
+CHECK (total_amount = quantity * unit_amount - discount_amount);
 GO
 ALTER TABLE Pickup ADD CONSTRAINT CK_Pickup_Type
 CHECK (pickup_type IN ('Regular','Early','Exception'));
@@ -675,9 +693,6 @@ CHECK (status IN ('Pending','Approved','Rejected'));
 GO
 ALTER TABLE Refund ADD CONSTRAINT CK_Refund_Status
 CHECK (status IN ('Pending','Completed','Rejected'));
-GO
-ALTER TABLE Receipt ADD CONSTRAINT CK_Receipt_Method
-CHECK (payment_method IN ('Cash','BankTransfer','Card'));
 GO
 ALTER TABLE Bus ADD CONSTRAINT CK_Bus_Status
 CHECK (status IN ('Active','Inactive','Maintenance'));
