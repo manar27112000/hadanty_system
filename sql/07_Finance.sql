@@ -15,6 +15,105 @@ GO
 
 
 -- =============================================
+-- 1b. FeePlan
+-- A named price list of a nursery (for example "Sunshine monthly").
+-- An enrollment points to the plan it is billed by.
+-- =============================================
+
+CREATE TABLE FeePlan (
+    fee_plan_id INT IDENTITY(1,1) PRIMARY KEY,
+    nursery_id INT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    billing_cycle VARCHAR(20) NOT NULL DEFAULT 'Monthly',
+    status VARCHAR(20) NOT NULL DEFAULT 'Active',
+
+    CONSTRAINT FK_FeePlan_Nursery
+        FOREIGN KEY (nursery_id)
+        REFERENCES Nursery(nursery_id),
+
+    CONSTRAINT UQ_FeePlan_Nursery_Name
+        UNIQUE (nursery_id, name),
+
+    CONSTRAINT UQ_FeePlan_Id_Nursery
+        UNIQUE (fee_plan_id, nursery_id)
+);
+GO
+
+
+-- =============================================
+-- 1c. FeePlanItem
+-- What a plan charges each month: one row per fee type.
+-- =============================================
+
+CREATE TABLE FeePlanItem (
+    fee_plan_item_id INT IDENTITY(1,1) PRIMARY KEY,
+    fee_plan_id INT NOT NULL,
+    fee_type_id INT NOT NULL,
+    amount DECIMAL(12,2) NOT NULL,
+
+    CONSTRAINT FK_FeePlanItem_Plan
+        FOREIGN KEY (fee_plan_id)
+        REFERENCES FeePlan(fee_plan_id),
+
+    CONSTRAINT FK_FeePlanItem_FeeType
+        FOREIGN KEY (fee_type_id)
+        REFERENCES FeeType(fee_type_id),
+
+    CONSTRAINT UQ_FeePlanItem_Plan_FeeType
+        UNIQUE (fee_plan_id, fee_type_id)
+);
+GO
+
+
+-- =============================================
+-- 1d. Enrollment.fee_plan_id
+-- (Enrollment is created in 03_Academic.sql, before FeePlan exists.)
+-- The composite key keeps the plan inside the enrollment's own nursery.
+-- =============================================
+
+ALTER TABLE Enrollment ADD fee_plan_id INT NULL;
+GO
+
+ALTER TABLE Enrollment
+ADD CONSTRAINT FK_Enrollment_FeePlan
+    FOREIGN KEY (fee_plan_id, nursery_id)
+    REFERENCES FeePlan(fee_plan_id, nursery_id);
+GO
+
+
+-- =============================================
+-- 1e. BillingRun
+-- One row per nursery per month when monthly invoices are generated.
+-- account NULL = started by the System (the scheduled job).
+-- Together with the unique index on Invoice(enrollment, period) this
+-- makes it impossible to bill the same child twice for the same month.
+-- =============================================
+
+CREATE TABLE BillingRun (
+    billing_run_id INT IDENTITY(1,1) PRIMARY KEY,
+    nursery_id INT NOT NULL,
+    billing_period DATE NOT NULL,          -- first day of the month billed
+    status VARCHAR(20) NOT NULL DEFAULT 'Running',
+    started_by_account_id INT NULL,
+    started_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+    finished_at DATETIME2 NULL,
+    invoices_created INT NOT NULL DEFAULT 0,
+
+    CONSTRAINT FK_BillingRun_Nursery
+        FOREIGN KEY (nursery_id)
+        REFERENCES Nursery(nursery_id),
+
+    CONSTRAINT FK_BillingRun_Account
+        FOREIGN KEY (started_by_account_id)
+        REFERENCES UserAccount(account_id),
+
+    CONSTRAINT UQ_BillingRun_Nursery_Period
+        UNIQUE (nursery_id, billing_period)
+);
+GO
+
+
+-- =============================================
 -- 2. Invoice
 -- Enrollment 1 : N Invoice (child + enrollment always agree)
 --
@@ -23,12 +122,17 @@ GO
 --   Invoice.total_amount = SUM(Item.total_amount) - invoice-level discounts
 --   Invoice.discount_total = item discounts + invoice-level discounts
 -- A given discount is applied at ONE level only (invoice OR item).
+--
+-- billing_run_id / billing_period are filled for automatic monthly
+-- invoices and NULL for manual ones (registration fee, extras).
 -- =============================================
 
 CREATE TABLE Invoice (
     invoice_id INT IDENTITY(1,1) PRIMARY KEY,
     enrollment_id INT NOT NULL,
     child_id INT NOT NULL,
+    billing_run_id INT NULL,
+    billing_period DATE NULL,
     invoice_date DATE NOT NULL,
     due_date DATE,
     discount_total DECIMAL(12,2) NOT NULL DEFAULT 0,
@@ -38,7 +142,11 @@ CREATE TABLE Invoice (
 
     CONSTRAINT FK_Invoice_Enrollment
         FOREIGN KEY (enrollment_id, child_id)
-        REFERENCES Enrollment(enrollment_id, child_id)
+        REFERENCES Enrollment(enrollment_id, child_id),
+
+    CONSTRAINT FK_Invoice_BillingRun
+        FOREIGN KEY (billing_run_id)
+        REFERENCES BillingRun(billing_run_id)
 );
 GO
 

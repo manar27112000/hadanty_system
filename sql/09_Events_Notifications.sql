@@ -37,6 +37,12 @@ CREATE TABLE EventRegistration (
     child_id INT NOT NULL,
     confirmation_status VARCHAR(50) NOT NULL DEFAULT 'Pending',
     registered_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+    -- a paid event is billed through an invoice item (fee type "Activities")
+    invoice_item_id INT NULL,
+
+    CONSTRAINT FK_EventRegistration_InvoiceItem
+        FOREIGN KEY (invoice_item_id)
+        REFERENCES InvoiceItem(invoice_item_id),
 
     CONSTRAINT FK_EventRegistration_Event
         FOREIGN KEY (event_id)
@@ -82,7 +88,9 @@ CREATE TABLE NotificationType (
     notification_type_id INT IDENTITY(1,1) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(255),
-    is_enabled BIT NOT NULL DEFAULT 1
+    is_enabled BIT NOT NULL DEFAULT 1,
+    -- a mandatory type (for example health or safety) cannot be switched off by a guardian
+    is_mandatory BIT NOT NULL DEFAULT 0
 );
 GO
 
@@ -128,6 +136,7 @@ CREATE TABLE NotificationDelivery (
     delivery_id INT IDENTITY(1,1) PRIMARY KEY,
     notification_id INT NOT NULL,
     account_id INT NOT NULL,
+    channel VARCHAR(20) NOT NULL DEFAULT 'Push',
     sent_at DATETIME2,
     delivered_at DATETIME2,
     read_at DATETIME2,
@@ -141,7 +150,57 @@ CREATE TABLE NotificationDelivery (
         FOREIGN KEY (account_id)
         REFERENCES UserAccount(account_id),
 
-    CONSTRAINT UQ_NotificationDelivery_Notification_Account
-        UNIQUE (notification_id, account_id)
+    -- the same notification may reach the same person on several channels
+    CONSTRAINT UQ_NotificationDelivery_Notification_Account_Channel
+        UNIQUE (notification_id, account_id, channel)
+);
+GO
+
+
+-- =============================================
+-- 7. NotificationTemplate
+-- The wording of a notification type per channel and language.
+-- =============================================
+
+CREATE TABLE NotificationTemplate (
+    template_id INT IDENTITY(1,1) PRIMARY KEY,
+    notification_type_id INT NOT NULL,
+    channel VARCHAR(20) NOT NULL,
+    language VARCHAR(5) NOT NULL DEFAULT 'ar',
+    subject VARCHAR(200) NULL,
+    body VARCHAR(1000) NOT NULL,
+    is_active BIT NOT NULL DEFAULT 1,
+
+    CONSTRAINT FK_NotificationTemplate_Type
+        FOREIGN KEY (notification_type_id)
+        REFERENCES NotificationType(notification_type_id),
+
+    CONSTRAINT UQ_NotificationTemplate_Type_Channel_Language
+        UNIQUE (notification_type_id, channel, language)
+);
+GO
+
+
+-- =============================================
+-- 8. NotificationPreference
+-- A user's choice per notification type and channel.
+-- No row means the default (enabled). Mandatory types ignore it.
+-- =============================================
+
+CREATE TABLE NotificationPreference (
+    account_id INT NOT NULL,
+    notification_type_id INT NOT NULL,
+    channel VARCHAR(20) NOT NULL,
+    is_enabled BIT NOT NULL,
+
+    PRIMARY KEY (account_id, notification_type_id, channel),
+
+    CONSTRAINT FK_NotificationPreference_Account
+        FOREIGN KEY (account_id)
+        REFERENCES UserAccount(account_id),
+
+    CONSTRAINT FK_NotificationPreference_Type
+        FOREIGN KEY (notification_type_id)
+        REFERENCES NotificationType(notification_type_id)
 );
 GO

@@ -255,13 +255,14 @@ GO
 /* =========================================================
    12. ChildGuardian
    ========================================================= */
-INSERT INTO ChildGuardian (child_id, guardian_id)
+INSERT INTO ChildGuardian
+(child_id, guardian_id, relationship_type, is_financial_responsible, is_emergency_contact)
 VALUES
-(1, 1), (2, 1),
-(3, 2),
-(4, 3), (5, 3),
-(6, 4),
-(7, 5), (8, 5);
+(1, 1, 'Father', 1, 1), (2, 1, 'Father', 1, 1),
+(3, 2, 'Mother', 1, 1),
+(4, 3, 'Father', 1, 1), (5, 3, 'Father', 1, 1),
+(6, 4, 'Mother', 1, 1),
+(7, 5, 'Father', 1, 1), (8, 5, 'Father', 1, 1);
 GO
 
 
@@ -275,7 +276,8 @@ VALUES
 (1, 1, '2025-2026', '2025-09-01', '2026-06-30', 'Closed'),
 (2, 2, '2025-2026', '2025-09-01', '2026-06-30', 'Closed'),
 (3, 1, '2026-2027', '2026-09-01', '2027-06-30', 'Active'),
-(4, 2, '2026-2027', '2026-09-01', '2027-06-30', 'Active');
+(4, 2, '2026-2027', '2026-09-01', '2027-06-30', 'Active'),
+(5, 1, '2027-2028', '2027-09-01', '2028-06-30', 'Planned');
 SET IDENTITY_INSERT AcademicYear OFF;
 GO
 
@@ -316,6 +318,10 @@ GO
 /* =========================================================
    16. Enrollment
    Enrollment 9 is child 1's completed enrollment from last year.
+   Re-enrollment for the planned year 2027-2028 is decided by the guardian:
+     Enrollment 10 (child 2) was opened by the nursery and waits for the guardian.
+     Enrollment 11 (child 3) was confirmed by guardian 2 and waits for the year to start.
+   Fee plans are attached later (section 39), once FeePlan exists.
    ========================================================= */
 SET IDENTITY_INSERT Enrollment ON;
 INSERT INTO Enrollment
@@ -329,7 +335,14 @@ VALUES
 (6, 2, 6, 4, 4, '2026-09-03', 'Active'),
 (7, 2, 7, 4, 4, '2026-09-03', 'Active'),
 (8, 2, 8, 4, 4, '2026-09-03', 'Active'),
-(9, 1, 1, 1, 1, '2025-09-01', 'Completed');
+(9, 1, 1, 1, 1, '2025-09-01', 'Completed'),
+(10, 1, 2, 5, 1, '2026-09-25', 'Pending');
+
+INSERT INTO Enrollment
+(enrollment_id, nursery_id, child_id, academic_year_id, branch_id, enrollment_date, status,
+ confirmed_by_guardian_id, confirmed_at)
+VALUES
+(11, 1, 3, 5, 2, '2026-09-25', 'Pending', 2, '2026-09-27 19:10:00');
 SET IDENTITY_INSERT Enrollment OFF;
 GO
 
@@ -410,16 +423,16 @@ GO
    Child 6 is Absent and has no check-in.
    ========================================================= */
 SET IDENTITY_INSERT Attendance ON;
-INSERT INTO Attendance (attendance_id, enrollment_id, child_id, attendance_date, status)
+INSERT INTO Attendance (attendance_id, enrollment_id, child_id, attendance_date, status, absence_reason)
 VALUES
-(1, 1, 1, '2026-09-21', 'Present'),
-(2, 2, 2, '2026-09-21', 'Present'),
-(3, 3, 3, '2026-09-21', 'Late'),
-(4, 4, 4, '2026-09-21', 'Present'),
-(5, 5, 5, '2026-09-21', 'Present'),
-(6, 6, 6, '2026-09-21', 'Absent'),
-(7, 7, 7, '2026-09-21', 'Present'),
-(8, 8, 8, '2026-09-21', 'Late');
+(1, 1, 1, '2026-09-21', 'Present', NULL),
+(2, 2, 2, '2026-09-21', 'Present', NULL),
+(3, 3, 3, '2026-09-21', 'Late',    NULL),
+(4, 4, 4, '2026-09-21', 'Present', NULL),
+(5, 5, 5, '2026-09-21', 'Present', NULL),
+(6, 6, 6, '2026-09-21', 'Absent',  'Sick, guardian called in the morning'),
+(7, 7, 7, '2026-09-21', 'Present', NULL),
+(8, 8, 8, '2026-09-21', 'Late',    NULL);
 SET IDENTITY_INSERT Attendance OFF;
 GO
 
@@ -465,13 +478,16 @@ GO
    ========================================================= */
 SET IDENTITY_INSERT AuthorizedPickupPerson ON;
 INSERT INTO AuthorizedPickupPerson
-(authorized_person_id, nursery_id, name, phone, relationship_type, identification_info, status)
+(authorized_person_id, nursery_id, guardian_id, name, phone, identification_info, status)
 VALUES
-(1, 1, 'Mohamed Adel',    '01110000001', 'Father', 'ID-DEMO-001', 'Active'),
-(2, 1, 'Sara Hassan',     '01110000002', 'Mother', 'ID-DEMO-002', 'Active'),
-(3, 2, 'Khaled Mahmoud',  '01110000003', 'Father', 'ID-DEMO-003', 'Active'),
-(4, 2, 'Mariam Ali',      '01110000004', 'Mother', 'ID-DEMO-004', 'Active'),
-(5, 2, 'Youssef Ibrahim', '01110000005', 'Father', 'ID-DEMO-005', 'Active');
+-- guardians registered as pickup people: name and phone are read from Guardian
+(1, 1, 1, NULL, NULL, 'ID-DEMO-001', 'Active'),
+(2, 1, 2, NULL, NULL, 'ID-DEMO-002', 'Active'),
+(3, 2, 3, NULL, NULL, 'ID-DEMO-003', 'Active'),
+(4, 2, 4, NULL, NULL, 'ID-DEMO-004', 'Active'),
+(5, 2, 5, NULL, NULL, 'ID-DEMO-005', 'Active'),
+-- someone who is not a guardian
+(6, 1, NULL, 'Samia Adel', '01110000066', 'ID-DEMO-006', 'Active');
 SET IDENTITY_INSERT AuthorizedPickupPerson OFF;
 GO
 
@@ -479,13 +495,15 @@ GO
 /* =========================================================
    25. ChildAuthorizedPickup   (who may take which child)
    ========================================================= */
-INSERT INTO ChildAuthorizedPickup (child_id, authorized_person_id)
+INSERT INTO ChildAuthorizedPickup (child_id, authorized_person_id, relationship_type)
 VALUES
-(1, 1), (2, 1),
-(3, 2),
-(4, 3), (5, 3),
-(6, 4),
-(7, 5), (8, 5);
+(1, 1, 'Father'), (2, 1, 'Father'),
+(3, 2, 'Mother'),
+(4, 3, 'Father'), (5, 3, 'Father'),
+(6, 4, 'Mother'),
+(7, 5, 'Father'), (8, 5, 'Father'),
+-- the grandmother of children 1 and 2
+(1, 6, 'Grandmother'), (2, 6, 'Grandmother');
 GO
 
 
@@ -526,6 +544,36 @@ GO
 
 
 /* =========================================================
+   27b. BlockedPickupPerson
+   Someone who must never receive child 3 (recorded by staff 3,
+   who works in the child's branch).
+   ========================================================= */
+SET IDENTITY_INSERT BlockedPickupPerson ON;
+INSERT INTO BlockedPickupPerson
+(blocked_id, child_id, person_name, phone, identification_info, reason, blocked_by_staff_id, blocked_at, status)
+VALUES
+(1, 3, 'Ramy Hassan', '01110000077', 'ID-DEMO-BLOCKED-001',
+ 'Court order: no contact with the child', 3, '2026-09-02 10:00:00', 'Active');
+SET IDENTITY_INSERT BlockedPickupPerson OFF;
+GO
+
+
+/* =========================================================
+   27c. PickupCode
+   Code 1 was used for pickup 1. Code 2 is still waiting.
+   Only a hash is stored. The person is authorized for THAT child.
+   ========================================================= */
+SET IDENTITY_INSERT PickupCode ON;
+INSERT INTO PickupCode
+(pickup_code_id, child_id, authorized_person_id, created_by_account_id, code_hash, created_at, expires_at, used_at, status)
+VALUES
+(1, 3, 2, 7, 'HASH_DEMO_483921', '2026-09-21 14:30:00', '2026-09-21 15:30:00', '2026-09-21 14:59:00', 'Used'),
+(2, 5, 3, 8, 'HASH_DEMO_120554', '2026-09-30 13:00:00', '2026-09-30 15:30:00', NULL, 'Active');
+SET IDENTITY_INSERT PickupCode OFF;
+GO
+
+
+/* =========================================================
    28. DailyReport
    ========================================================= */
 SET IDENTITY_INSERT DailyReport ON;
@@ -541,17 +589,36 @@ GO
 
 
 /* =========================================================
+   28b. AssessmentLevel   (each nursery defines its own list;
+        teachers pick from it)
+   ========================================================= */
+SET IDENTITY_INSERT AssessmentLevel ON;
+INSERT INTO AssessmentLevel (level_id, nursery_id, name, sort_order, status)
+VALUES
+(1, 1, 'Excellent',     1, 'Active'),
+(2, 1, 'Good',          2, 'Active'),
+(3, 1, 'Fair',          3, 'Active'),
+(4, 1, 'Needs Support', 4, 'Active'),
+(5, 2, 'Excellent',     1, 'Active'),
+(6, 2, 'Good',          2, 'Active'),
+(7, 2, 'Fair',          3, 'Active'),
+(8, 2, 'Needs Support', 4, 'Active');
+SET IDENTITY_INSERT AssessmentLevel OFF;
+GO
+
+
+/* =========================================================
    29. DailyAssessment
    ========================================================= */
 SET IDENTITY_INSERT DailyAssessment ON;
 INSERT INTO DailyAssessment
-(daily_assessment_id, child_id, subject_id, assessment_date, level, notes)
+(daily_assessment_id, nursery_id, child_id, subject_id, assessment_date, level_id, notes)
 VALUES
-(1, 1, 1, '2026-09-21', 'Excellent', 'Good letter recognition'),
-(2, 1, 2, '2026-09-21', 'Good',      'Understands simple words'),
-(3, 2, 1, '2026-09-21', 'Excellent', 'Very good participation'),
-(4, 3, 3, '2026-09-21', 'Good',      'Understands basic numbers'),
-(5, 5, 4, '2026-09-21', 'Excellent', 'Very curious');
+(1, 1, 1, 1, '2026-09-21', 1, 'Good letter recognition'),
+(2, 1, 1, 2, '2026-09-21', 2, 'Understands simple words'),
+(3, 1, 2, 1, '2026-09-21', 1, 'Very good participation'),
+(4, 1, 3, 3, '2026-09-21', 2, 'Understands basic numbers'),
+(5, 2, 5, 4, '2026-09-21', 5, 'Very curious');
 SET IDENTITY_INSERT DailyAssessment OFF;
 GO
 
@@ -561,13 +628,13 @@ GO
    ========================================================= */
 SET IDENTITY_INSERT MonthlyAssessment ON;
 INSERT INTO MonthlyAssessment
-(monthly_assessment_id, child_id, subject_id, month, year, level, notes)
+(monthly_assessment_id, nursery_id, child_id, subject_id, month, year, level_id, notes)
 VALUES
-(1, 1, 1, 9, 2026, 'Excellent', 'Strong Arabic development'),
-(2, 1, 2, 9, 2026, 'Good',      'Good English progress'),
-(3, 2, 1, 9, 2026, 'Excellent', 'Excellent participation'),
-(4, 3, 3, 9, 2026, 'Good',      'Good mathematical skills'),
-(5, 5, 4, 9, 2026, 'Excellent', 'Strong curiosity and participation');
+(1, 1, 1, 1, 9, 2026, 1, 'Strong Arabic development'),
+(2, 1, 1, 2, 9, 2026, 2, 'Good English progress'),
+(3, 1, 2, 1, 9, 2026, 1, 'Excellent participation'),
+(4, 1, 3, 3, 9, 2026, 2, 'Good mathematical skills'),
+(5, 2, 5, 4, 9, 2026, 5, 'Strong curiosity and participation');
 SET IDENTITY_INSERT MonthlyAssessment OFF;
 GO
 
@@ -583,6 +650,23 @@ VALUES
 (3, 3, 'https://demo.hadanty.local/media/child3.jpg', 'image', 'Active'),
 (4, 5, 'https://demo.hadanty.local/media/child5.jpg', 'image', 'Active');
 SET IDENTITY_INSERT Media OFF;
+GO
+
+
+/* =========================================================
+   31b. MediaConsent   (a photo exists only for children whose
+        guardian gave consent; child 4's consent was withdrawn)
+   ========================================================= */
+SET IDENTITY_INSERT MediaConsent ON;
+INSERT INTO MediaConsent
+(consent_id, child_id, given_by_guardian_id, scope, given_at, revoked_at)
+VALUES
+(1, 1, 1, 'AllParents', '2026-09-01 09:00:00', NULL),
+(2, 2, 1, 'ClassOnly',  '2026-09-01 09:00:00', NULL),
+(3, 3, 2, 'ClassOnly',  '2026-09-02 09:30:00', NULL),
+(4, 5, 3, 'ClassOnly',  '2026-09-01 10:00:00', NULL),
+(5, 4, 3, 'AllParents', '2026-09-01 10:00:00', '2026-09-20 18:00:00');
+SET IDENTITY_INSERT MediaConsent OFF;
 GO
 
 
@@ -649,6 +733,20 @@ GO
 
 
 /* =========================================================
+   36b. MedicationLog   (doses of medication 1, given by staff 3,
+        who works in child 3's branch, while the course was active)
+   ========================================================= */
+SET IDENTITY_INSERT MedicationLog ON;
+INSERT INTO MedicationLog
+(log_id, medication_id, given_by_staff_id, given_at, dose_given, notes)
+VALUES
+(1, 1, 3, '2026-09-21 12:30:00', '5 ml', 'Given after lunch'),
+(2, 1, 3, '2026-09-22 12:30:00', '5 ml', 'Given after lunch');
+SET IDENTITY_INSERT MedicationLog OFF;
+GO
+
+
+/* =========================================================
    37. FeeType   (platform-wide)
    ========================================================= */
 SET IDENTITY_INSERT FeeType ON;
@@ -680,6 +778,38 @@ GO
 
 
 /* =========================================================
+   38b. FeePlan, FeePlanItem, BillingRun
+   Each nursery has a monthly plan. Every enrollment points to the plan it
+   is billed by. The September run of nursery 1 created invoices 1 to 3
+   (one per active enrollment of that nursery). Nursery 2 invoices are manual.
+   ========================================================= */
+SET IDENTITY_INSERT FeePlan ON;
+INSERT INTO FeePlan (fee_plan_id, nursery_id, name, billing_cycle, status)
+VALUES
+(1, 1, 'Standard monthly', 'Monthly', 'Active'),
+(2, 2, 'Standard monthly', 'Monthly', 'Active');
+SET IDENTITY_INSERT FeePlan OFF;
+
+SET IDENTITY_INSERT FeePlanItem ON;
+INSERT INTO FeePlanItem (fee_plan_item_id, fee_plan_id, fee_type_id, amount)
+VALUES
+(1, 1, 2, 2000.00),
+(2, 2, 2, 2000.00);
+SET IDENTITY_INSERT FeePlanItem OFF;
+
+UPDATE Enrollment SET fee_plan_id = 1 WHERE nursery_id = 1 AND enrollment_id IN (1, 2, 3, 10, 11);
+UPDATE Enrollment SET fee_plan_id = 2 WHERE nursery_id = 2;
+
+SET IDENTITY_INSERT BillingRun ON;
+INSERT INTO BillingRun
+(billing_run_id, nursery_id, billing_period, status, started_by_account_id, started_at, finished_at, invoices_created)
+VALUES
+(1, 1, '2026-09-01', 'Completed', NULL, '2026-09-01 00:05:00', '2026-09-01 00:05:30', 3);
+SET IDENTITY_INSERT BillingRun OFF;
+GO
+
+
+/* =========================================================
    39. Invoice   (linked to the child's enrollment)
    Rules:  Item.total     = quantity * unit_amount - item discounts
            Invoice.total  = SUM(Item.total) - invoice-level discounts
@@ -692,16 +822,19 @@ GO
    Invoice 4  items 2000 + 200, paid 2400,
               refunded 200 (overpayment)         total 2200  Paid
    Invoice 5  item-level discount 100            total 1900  Pending (a payment failed)
+   Invoice 6  manual, Art Exhibition ticket       total 50    Pending (paid event)
+   Invoices 1 to 3 belong to billing run 1 (September, nursery 1).
    ========================================================= */
 SET IDENTITY_INSERT Invoice ON;
 INSERT INTO Invoice
-(invoice_id, enrollment_id, child_id, invoice_date, due_date, discount_total, total_amount, status)
+(invoice_id, enrollment_id, child_id, billing_run_id, billing_period, invoice_date, due_date, discount_total, total_amount, status)
 VALUES
-(1, 1, 1, '2026-09-01', '2026-09-10', 100.00, 1900.00, 'Paid'),
-(2, 2, 2, '2026-09-01', '2026-09-10',   0.00, 2000.00, 'Paid'),
-(3, 3, 3, '2026-09-02', '2026-09-12', 150.00, 1850.00, 'PartiallyPaid'),
-(4, 5, 5, '2026-09-01', '2026-09-10',   0.00, 2200.00, 'Paid'),
-(5, 7, 7, '2026-09-03', '2026-09-13', 100.00, 1900.00, 'Pending');
+(1, 1, 1, 1,    '2026-09-01', '2026-09-01', '2026-09-10', 100.00, 1900.00, 'Paid'),
+(2, 2, 2, 1,    '2026-09-01', '2026-09-01', '2026-09-10',   0.00, 2000.00, 'Paid'),
+(3, 3, 3, 1,    '2026-09-01', '2026-09-02', '2026-09-12', 150.00, 1850.00, 'PartiallyPaid'),
+(4, 5, 5, NULL, NULL,         '2026-09-01', '2026-09-10',   0.00, 2200.00, 'Paid'),
+(5, 7, 7, NULL, NULL,         '2026-09-03', '2026-09-13', 100.00, 1900.00, 'Pending'),
+(6, 3, 3, NULL, NULL,         '2026-09-26', '2026-10-06',   0.00,   50.00, 'Pending');
 SET IDENTITY_INSERT Invoice OFF;
 GO
 
@@ -718,7 +851,8 @@ VALUES
 (3, 3, 2, 'September Monthly Fee',      1, 2000.00,   0.00, 2000.00),
 (4, 4, 2, 'September Monthly Fee',      1, 2000.00,   0.00, 2000.00),
 (5, 4, 3, 'September Transportation',   1,  200.00,   0.00,  200.00),
-(6, 5, 2, 'September Monthly Fee',      1, 2000.00, 100.00, 1900.00);
+(6, 5, 2, 'September Monthly Fee',      1, 2000.00, 100.00, 1900.00),
+(7, 6, 4, 'Art Exhibition ticket',      1,   50.00,   0.00,   50.00);
 SET IDENTITY_INSERT InvoiceItem OFF;
 GO
 
@@ -760,8 +894,8 @@ VALUES
 (1, 1, 1900.00, '2026-09-05 10:00:00', 'Cash',         'TXN10001', 'Completed'),
 (2, 2, 2000.00, '2026-09-05 11:00:00', 'BankTransfer', 'TXN10002', 'Completed'),
 (3, 3, 1000.00, '2026-09-06 12:00:00', 'Cash',         'TXN10003', 'Completed'),
-(4, 4, 2400.00, '2026-09-05 13:00:00', 'Card',         'TXN10004', 'Completed'),
-(5, 3,  850.00, '2026-09-28 09:00:00', 'BankTransfer', 'TXN10005', 'Pending'),
+(4, 4, 2400.00, '2026-09-05 13:00:00', 'Instapay',     'TXN10004', 'Completed'),
+(5, 3,  850.00, '2026-09-28 09:00:00', 'Wallet',       'TXN10005', 'Pending'),
 (6, 5, 1900.00, '2026-09-10 16:00:00', 'BankTransfer', 'TXN10006', 'Failed');
 SET IDENTITY_INSERT Payment OFF;
 GO
@@ -953,13 +1087,13 @@ GO
    56. EventRegistration
    ========================================================= */
 SET IDENTITY_INSERT EventRegistration ON;
-INSERT INTO EventRegistration (registration_id, event_id, child_id, confirmation_status)
+INSERT INTO EventRegistration (registration_id, event_id, child_id, confirmation_status, invoice_item_id)
 VALUES
-(1, 1, 1, 'Confirmed'),
-(2, 1, 2, 'Confirmed'),
-(3, 2, 3, 'Confirmed'),
-(4, 3, 5, 'Confirmed'),
-(5, 4, 1, 'Pending');
+(1, 1, 1, 'Confirmed', NULL),
+(2, 1, 2, 'Confirmed', NULL),
+(3, 2, 3, 'Confirmed', 7),      -- paid through invoice 6, item 7
+(4, 3, 5, 'Confirmed', NULL),
+(5, 4, 1, 'Pending',   NULL);
 SET IDENTITY_INSERT EventRegistration OFF;
 GO
 
@@ -982,14 +1116,42 @@ GO
    58. NotificationType   (platform-wide)
    ========================================================= */
 SET IDENTITY_INSERT NotificationType ON;
-INSERT INTO NotificationType (notification_type_id, name, description, is_enabled)
+INSERT INTO NotificationType (notification_type_id, name, description, is_enabled, is_mandatory)
 VALUES
-(1, 'Attendance', 'Attendance notifications',             1),
-(2, 'Payment',    'Payment and invoice notifications',    1),
-(3, 'Event',      'Event notifications',                  1),
-(4, 'Health',     'Health and incident notifications',    1),
-(5, 'General',    'General nursery notifications',        1);
+(1, 'Attendance', 'Attendance notifications',             1, 0),
+(2, 'Payment',    'Payment and invoice notifications',    1, 0),
+(3, 'Event',      'Event notifications',                  1, 0),
+(4, 'Health',     'Health and incident notifications',    1, 1),
+(5, 'General',    'General nursery notifications',        1, 0);
 SET IDENTITY_INSERT NotificationType OFF;
+GO
+
+
+/* =========================================================
+   58b. NotificationTemplate   (Arabic wording per type and channel)
+   ========================================================= */
+SET IDENTITY_INSERT NotificationTemplate ON;
+INSERT INTO NotificationTemplate
+(template_id, notification_type_id, channel, language, subject, body, is_active)
+VALUES
+(1, 1, 'Push',  'ar', NULL,                  N'وصل {child} إلى الحضانة متأخرًا اليوم.', 1),
+(2, 2, 'Push',  'ar', NULL,                  N'تم استلام دفعتك بقيمة {amount} جنيه.', 1),
+(3, 2, 'Email', 'ar', N'إيصال دفع من الحضانة', N'تم استلام دفعتك بقيمة {amount} جنيه. رقم الإيصال {receipt}.', 1),
+(4, 3, 'Push',  'ar', NULL,                  N'تذكير: فعالية {event} يوم {date}.', 1),
+(5, 4, 'Push',  'ar', NULL,                  N'تم تسجيل حادث بسيط لـ {child}. تم إبلاغك وهو بخير.', 1),
+(6, 4, 'WhatsApp', 'ar', NULL,               N'تم تسجيل حادث بسيط لـ {child}. اتصلي بالحضانة للتفاصيل.', 1),
+(7, 5, 'Email', 'ar', N'إعلان من الحضانة',    N'{message}', 1);
+SET IDENTITY_INSERT NotificationTemplate OFF;
+GO
+
+
+/* =========================================================
+   58c. NotificationPreference   (guardian 1 switched off general
+        announcements by email; mandatory types ignore preferences)
+   ========================================================= */
+INSERT INTO NotificationPreference (account_id, notification_type_id, channel, is_enabled)
+VALUES
+(6, 5, 'Email', 0);
 GO
 
 
@@ -1015,13 +1177,15 @@ GO
    ========================================================= */
 SET IDENTITY_INSERT NotificationDelivery ON;
 INSERT INTO NotificationDelivery
-(delivery_id, notification_id, account_id, sent_at, delivered_at, read_at, delivery_status)
+(delivery_id, notification_id, account_id, channel, sent_at, delivered_at, read_at, delivery_status)
 VALUES
-(1, 1, 7, '2026-09-21 09:00:00', '2026-09-21 09:00:10', '2026-09-21 09:05:00', 'Read'),
-(2, 2, 6, '2026-09-21 12:00:00', '2026-09-21 12:00:05', '2026-09-21 12:10:00', 'Read'),
-(3, 3, 6, '2026-09-22 10:00:00', '2026-09-22 10:00:05', NULL,                  'Delivered'),
-(4, 4, 8, '2026-09-22 11:00:00', '2026-09-22 11:00:05', '2026-09-22 11:15:00', 'Read'),
-(5, 5, 7, '2026-09-23 09:00:00', '2026-09-23 09:00:05', NULL,                  'Delivered');
+(1, 1, 7, 'Push',     '2026-09-21 09:00:00', '2026-09-21 09:00:10', '2026-09-21 09:05:00', 'Read'),
+(2, 2, 6, 'Push',     '2026-09-21 12:00:00', '2026-09-21 12:00:05', '2026-09-21 12:10:00', 'Read'),
+(3, 3, 6, 'Push',     '2026-09-22 10:00:00', '2026-09-22 10:00:05', NULL,                  'Delivered'),
+(4, 4, 8, 'Push',     '2026-09-22 11:00:00', '2026-09-22 11:00:05', '2026-09-22 11:15:00', 'Read'),
+(5, 5, 7, 'Email',    '2026-09-23 09:00:00', '2026-09-23 09:00:05', NULL,                  'Delivered'),
+(6, 4, 8, 'WhatsApp', '2026-09-22 11:00:00', NULL,                  NULL,                  'Failed'),
+(7, 2, 6, 'Email',    '2026-09-21 12:00:00', '2026-09-21 12:00:20', NULL,                  'Delivered');
 SET IDENTITY_INSERT NotificationDelivery OFF;
 GO
 
@@ -1084,7 +1248,13 @@ VALUES
 (3, 1, 'AllowOnlinePayment',  'true'),
 (4, 2, 'Currency',            'EGP'),
 (5, 2, 'LateCheckInMinutes',  '15'),
-(6, 2, 'AllowOnlinePayment',  'true');
+(6, 2, 'AllowOnlinePayment',  'true'),
+-- does an absence change the month's fee? differs from nursery to nursery
+(7, 1, 'AbsenceAffectsFees',  'false'),
+(8, 2, 'AbsenceAffectsFees',  'false'),
+-- days after the invoice date when payment is due
+(9, 1, 'BillingDueDays',      '10'),
+(10, 2, 'BillingDueDays',     '10');
 SET IDENTITY_INSERT NurserySetting OFF;
 GO
 
@@ -1122,6 +1292,7 @@ VALUES
 (6, NULL, 'AUTO_MARK_ABSENT',  'Attendance',      6, NULL,             'Status=Absent',                '2026-09-21 08:30:00', NULL);
 SET IDENTITY_INSERT AuditLog OFF;
 GO
+
 
 
 /* =========================================================

@@ -95,7 +95,10 @@ CREATE TABLE Guardian (
 
     CONSTRAINT FK_Guardian_Nursery
         FOREIGN KEY (nursery_id)
-        REFERENCES Nursery(nursery_id)
+        REFERENCES Nursery(nursery_id),
+
+    CONSTRAINT UQ_Guardian_Id_Nursery
+        UNIQUE (guardian_id, nursery_id)
 );
 GO
 
@@ -237,6 +240,8 @@ CREATE TABLE Child (
     date_of_birth DATE NOT NULL,
     gender VARCHAR(20),
     status VARCHAR(20) NOT NULL DEFAULT 'Active',
+    left_at DATE NULL,              -- when the child left the nursery (starts the retention period)
+    anonymized_at DATETIME2 NULL,   -- set when personal data was replaced (kept instead of deleting)
     created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
     updated_at DATETIME2 NULL,
 
@@ -253,10 +258,17 @@ GO
 -- =============================================
 -- 12. ChildGuardian
 -- Child M : N Guardian
+-- relationship_type, financial responsible and emergency contact
+-- belong to the PAIR (child, guardian), so they live here.
+-- A guardian is NOT automatically allowed to pick the child up:
+-- pickup permission is explicit (ChildAuthorizedPickup).
 -- =============================================
 CREATE TABLE ChildGuardian (
     child_id INT NOT NULL,
     guardian_id INT NOT NULL,
+    relationship_type VARCHAR(30) NOT NULL DEFAULT 'Guardian',
+    is_financial_responsible BIT NOT NULL DEFAULT 0,
+    is_emergency_contact BIT NOT NULL DEFAULT 0,
 
     PRIMARY KEY (child_id, guardian_id),
 

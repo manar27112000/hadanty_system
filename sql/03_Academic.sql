@@ -87,11 +87,20 @@ CREATE TABLE Enrollment (
     branch_id INT NOT NULL,
     enrollment_date DATE NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'Active',
+    -- Re-enrollment is decided by the guardian: the nursery opens it as 'Pending',
+    -- a guardian of THAT child confirms it, then it becomes 'Active'.
+    confirmed_by_guardian_id INT NULL,
+    confirmed_at DATETIME2 NULL,
     created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+    -- fee_plan_id is added in 07_Finance.sql (FeePlan is defined there)
 
     CONSTRAINT FK_Enrollment_Child
         FOREIGN KEY (child_id, nursery_id)
         REFERENCES Child(child_id, nursery_id),
+
+    CONSTRAINT FK_Enrollment_ConfirmedBy
+        FOREIGN KEY (child_id, confirmed_by_guardian_id)
+        REFERENCES ChildGuardian(child_id, guardian_id),
 
     CONSTRAINT FK_Enrollment_AcademicYear
         FOREIGN KEY (academic_year_id, nursery_id)

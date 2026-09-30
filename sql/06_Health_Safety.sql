@@ -112,3 +112,28 @@ CREATE TABLE Incident (
         REFERENCES Staff(staff_id)
 );
 GO
+
+-- =============================================
+-- 6. MedicationLog
+-- Every time a medication is given: who gave it, when, how much.
+-- Kept forever (legal record). A dose may only be logged while the
+-- medication is active and its consent is approved (procedure rule).
+-- =============================================
+CREATE TABLE MedicationLog (
+    log_id INT IDENTITY(1,1) PRIMARY KEY,
+    medication_id INT NOT NULL,
+    given_by_staff_id INT NOT NULL,
+    given_at DATETIME2 NOT NULL,
+    dose_given VARCHAR(100) NOT NULL,
+    notes VARCHAR(500) NULL,
+    created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+
+    CONSTRAINT FK_MedicationLog_Medication
+        FOREIGN KEY (medication_id)
+        REFERENCES Medication(medication_id),
+
+    CONSTRAINT FK_MedicationLog_Staff
+        FOREIGN KEY (given_by_staff_id)
+        REFERENCES Staff(staff_id)
+);
+GO
