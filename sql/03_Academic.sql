@@ -140,26 +140,3 @@ GO
 
 
 
-
-
-
-USE Hadanty;
-GO
-
-DROP TABLE IF EXISTS Activity;
-DROP TABLE IF EXISTS Homework;
-DROP TABLE IF EXISTS Subject;
-DROP TABLE IF EXISTS ClassAssignment;
-DROP TABLE IF EXISTS Enrollment;
-DROP TABLE IF EXISTS Class;
-DROP TABLE IF EXISTS AcademicYear;
-GO
-
-
-USE Hadanty;
-GO
-
-SELECT 
-    name AS TableName
-FROM sys.tables
-ORDER BY name;
